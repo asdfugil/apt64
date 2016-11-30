@@ -450,6 +450,24 @@ string pkgAcquire::QueueName(string Uri,MethodConfig const *&Config)
    } else
    {
       FullQueueName = AccessSchema + U.Host;
+
+      int parallel(_config->FindI("Acquire::"+U.Access+"::MaxParallel",8));
+      if (parallel > 0) {
+	 typedef map<string, int> indexmap;
+	 static indexmap indices;
+
+	 pair<indexmap::iterator, bool> cache(indices.insert(indexmap::value_type(FullQueueName, -1)));
+	 if (cache.second || cache.first->second == -1) {
+	    int &index(indices[U.Access]);
+	    if (index >= parallel)
+	       index = 0;
+	    cache.first->second = index++;
+	 }
+
+	 ostringstream value;
+	 value << U.Access << "::" << cache.first->second;
+	 FullQueueName = value.str();
+      }
    }
    unsigned int Instances = 0, SchemaLength = AccessSchema.length();
 
