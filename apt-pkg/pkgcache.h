@@ -629,6 +629,8 @@ struct pkgCache::Version
    map_stringitem_t VerStr;
    /** \brief section this version is filled in */
    map_stringitem_t Section;
+   /** \brief high-level name used to display package */
+   map_stringitem_t Display;
    /** \brief source package name this version comes from
       Always contains the name, even if it is the same as the binary name */
    map_stringitem_t SourcePkgName;

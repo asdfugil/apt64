@@ -43,6 +43,7 @@ class APT_HIDDEN debRecordParserBase : public pkgRecords::Parser
    virtual std::string ShortDesc(std::string const &lang) APT_OVERRIDE;
    virtual std::string LongDesc(std::string const &lang) APT_OVERRIDE;
    virtual std::string Name() APT_OVERRIDE;
+   virtual std::string Display() APT_OVERRIDE;
    virtual std::string Homepage() APT_OVERRIDE;
 
    // An arbitrary custom field

@@ -91,6 +91,7 @@ class pkgRecords::Parser						/*{{{*/
    std::string LongDesc() {return LongDesc("");};
 
    virtual std::string Name() {return std::string();};
+   virtual std::string Display() {return std::string();}
    virtual std::string Homepage() {return std::string();}
 
    // An arbitrary custom field

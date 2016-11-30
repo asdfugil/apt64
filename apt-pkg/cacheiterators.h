@@ -216,6 +216,7 @@ class pkgCache::VerIterator : public Iterator<Version, VerIterator> {
 	// Accessors
 	inline const char *VerStr() const {return S->VerStr == 0?0:Owner->StrP + S->VerStr;}
 	inline const char *Section() const {return S->Section == 0?0:Owner->StrP + S->Section;}
+	inline const char *Display() const {return S->Display == 0?0:Owner->StrP + S->Display;}
 	/** \brief source package name this version comes from
 	   Always contains the name, even if it is the same as the binary name */
 	inline const char *SourcePkgName() const {return Owner->StrP + S->SourcePkgName;}

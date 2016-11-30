@@ -72,6 +72,15 @@ string debRecordParserBase::Name()
    return Result;
 }
 									/*}}}*/
+// RecordParserBase::Display - Return the package homepage		/*{{{*/
+string debRecordParserBase::Display()
+{
+   string display(Section.FindS("Name"));
+   if (display.empty())
+      display = Section.FindS("Maemo-Display-Name");
+   return display;
+}
+									/*}}}*/
 // RecordParserBase::Homepage - Return the package homepage		/*{{{*/
 string debRecordParserBase::Homepage()
 {

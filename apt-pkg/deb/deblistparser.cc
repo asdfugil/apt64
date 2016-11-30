@@ -158,6 +158,15 @@ bool debListParser::NewVersion(pkgCache::VerIterator &Ver)
    const char *Start;
    const char *Stop;
 
+   if (Section.Find("Name",Start,Stop) == true)
+   {
+      Ver->Display = WriteString(Start, Stop - Start);
+   }
+   else if (Section.Find("Maemo-Display-Name",Start,Stop) == true)
+   {
+      Ver->Display = WriteString(Start, Stop - Start);
+   }
+
    // Parse the section
    if (Section.Find(pkgTagSection::Key::Section,Start,Stop) == true)
    {
