@@ -58,7 +58,7 @@ bool GetSrvRecords(std::string host, int port, std::vector<SrvRec> &Result)
 
 bool GetSrvRecords(std::string name, std::vector<SrvRec> &Result)
 {
-   unsigned char answer[PACKETSZ];
+   unsigned char answer[NS_PACKETSZ];
    int answer_len, compressed_name_len;
    int answer_count;
 
@@ -85,7 +85,7 @@ bool GetSrvRecords(std::string name, std::vector<SrvRec> &Result)
       return _error->Warning("dn_skipname failed %i", compressed_name_len);
 
    // pt points to the first answer record, go over all of them now
-   unsigned char *pt = answer+sizeof(HEADER)+compressed_name_len+QFIXEDSZ;
+   unsigned char *pt = answer+sizeof(HEADER)+compressed_name_len+NS_QFIXEDSZ;
    while ((int)Result.size() < answer_count && pt < answer+answer_len)
    {
       u_int16_t type, klass, priority, weight, port, dlen;
