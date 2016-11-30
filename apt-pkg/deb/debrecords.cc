@@ -208,6 +208,12 @@ void debRecordParserBase::GetRec(const char *&Start,const char *&Stop)
    Section.GetSection(Start,Stop);
 }
 									/*}}}*/
+// RecordParserBase::Find - Locate a tag			/*{{{*/
+bool debRecordParserBase::Find(const char *Tag,const char *&Start, const char *&End)
+{
+   return Section.Find(Tag,Start,End);
+}
+									/*}}}*/
 debRecordParserBase::~debRecordParserBase() {}
 
 bool debDebFileRecordParser::LoadContent()

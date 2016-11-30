@@ -100,6 +100,9 @@ class pkgRecords::Parser						/*{{{*/
    // The record in binary form
    virtual void GetRec(const char *&Start,const char *&Stop) {Start = Stop = 0;};
 
+   // Locate a tag
+   virtual bool Find(const char *Tag,const char *&Start, const char *&End) {Start = End = 0; return false;};
+
    Parser();
    virtual ~Parser();
 

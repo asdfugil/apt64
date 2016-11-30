@@ -50,6 +50,7 @@ class APT_HIDDEN debRecordParserBase : public pkgRecords::Parser
    virtual std::string RecordField(const char *fieldName) APT_OVERRIDE;
 
    virtual void GetRec(const char *&Start,const char *&Stop) APT_OVERRIDE;
+   virtual bool Find(const char *Tag,const char *&Start, const char *&End) APT_OVERRIDE;
 
    debRecordParserBase();
    virtual ~debRecordParserBase();
