@@ -1274,6 +1274,36 @@ bool pkgCacheGenerator::SelectReleaseFile(const string &File,const string &Site,
    return true;
 }
 									/*}}}*/
+// ListParser::NewTag - Create a Tag element				/*{{{*/
+// ---------------------------------------------------------------------
+/* */
+bool pkgCacheListParser::NewTag(pkgCache::VerIterator &Ver,
+					   const char *NameStart,
+					   unsigned int NameSize)
+{
+   return Owner->NewTag(Ver, NameStart, NameSize);
+}
+bool pkgCacheGenerator::NewTag(pkgCache::VerIterator &Ver,
+					   const char *NameStart,
+					   unsigned int NameSize)
+{
+   // Get a structure
+   unsigned long Tagg = AllocateInMap(sizeof(pkgCache::Tag));
+   if (Tagg == 0)
+      return false;
+   Cache.HeaderP->TagCount++;
+   
+   // Fill it in
+   pkgCache::TagIterator Tg(Cache,Cache.TagP + Tagg);
+   Tg->Name = WriteStringInMap(NameStart,NameSize);
+   if (Tg->Name == 0)
+      return false;
+   Tg->NextTag = Ver->TagList;
+   Ver->TagList = Tg.Index();
+   
+   return true;
+}
+									/*}}}*/
 // CacheGenerator::SelectFile - Select the current file being parsed	/*{{{*/
 // ---------------------------------------------------------------------
 /* This is used to select which file is to be associated with all newly

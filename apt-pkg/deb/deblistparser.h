@@ -56,6 +56,7 @@ class APT_HIDDEN debListParser : public pkgCacheListParser
    bool ParseDepends(pkgCache::VerIterator &Ver, pkgTagSection::Key Key,
 		     unsigned int Type);
    bool ParseProvides(pkgCache::VerIterator &Ver);
+   bool ParseTag(pkgCache::VerIterator &Ver);
 
 #ifdef APT_PKG_EXPOSE_STRING_VIEW
    APT_HIDDEN static bool GrabWord(APT::StringView Word,const WordList *List,unsigned char &Out);

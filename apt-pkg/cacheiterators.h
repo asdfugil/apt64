@@ -233,6 +233,7 @@ class pkgCache::VerIterator : public Iterator<Version, VerIterator> {
 	DescIterator TranslatedDescription() const;
 	inline DepIterator DependsList() const;
 	inline PrvIterator ProvidesList() const;
+	inline TagIterator TagList() const;
 	inline VerFileIterator FileList() const;
 	bool Downloadable() const;
 	inline const char *PriorityType() const {return Owner->Priority(S->Priority);}
@@ -247,6 +248,48 @@ class pkgCache::VerIterator : public Iterator<Version, VerIterator> {
 			S = OwnerPointer();
 	}
 	inline VerIterator() : Iterator<Version, VerIterator>() {}
+};
+									/*}}}*/
+// Tag Iterator								/*{{{*/
+class pkgCache::TagIterator
+{
+   Tag *Tg;
+   pkgCache *Owner;
+
+   void _dummy();
+
+   public:
+
+   // Iteration
+   void operator ++(int) {if (Tg != Owner->TagP) Tg = Owner->TagP + Tg->NextTag;};
+   inline void operator ++() {operator ++(0);};
+   inline bool end() const {return Tg == Owner->TagP?true:false;};
+   inline void operator =(const TagIterator &B) {Tg = B.Tg; Owner = B.Owner;};
+
+   // Comparison
+   inline bool operator ==(const TagIterator &B) const {return Tg == B.Tg;};
+   inline bool operator !=(const TagIterator &B) const {return Tg != B.Tg;};
+   int CompareTag(const TagIterator &B) const;
+
+   // Accessors
+   inline Tag *operator ->() {return Tg;};
+   inline Tag const *operator ->() const {return Tg;};
+   inline Tag &operator *() {return *Tg;};
+   inline Tag const &operator *() const {return *Tg;};
+   inline operator Tag *() {return Tg == Owner->TagP?0:Tg;};
+   inline operator Tag const *() const {return Tg == Owner->TagP?0:Tg;};
+   inline pkgCache *Cache() {return Owner;};
+
+   inline const char *Name() const {return Owner->StrP + Tg->Name;};
+   inline unsigned long Index() const {return Tg - Owner->TagP;};
+
+   inline TagIterator() : Tg(0), Owner(0) {};
+   inline TagIterator(pkgCache &Owner,Tag *Trg = 0) : Tg(Trg),
+              Owner(&Owner)
+   {
+      if (Tg == 0)
+	 Tg = Owner.TagP;
+   };
 };
 									/*}}}*/
 // Description Iterator							/*{{{*/
@@ -519,6 +562,8 @@ inline pkgCache::DescIterator pkgCache::VerIterator::DescriptionList() const
        {return DescIterator(*Owner,Owner->DescP + S->DescriptionList);}
 inline pkgCache::PrvIterator pkgCache::VerIterator::ProvidesList() const
        {return PrvIterator(*Owner,Owner->ProvideP + S->ProvidesList,S);}
+inline pkgCache::TagIterator pkgCache::VerIterator::TagList() const
+       {return TagIterator(*Owner,Owner->TagP + S->TagList);};
 inline pkgCache::DepIterator pkgCache::VerIterator::DependsList() const
        {return DepIterator(*Owner,Owner->DepP + S->DependsList,S);}
 inline pkgCache::VerFileIterator pkgCache::VerIterator::FileList() const

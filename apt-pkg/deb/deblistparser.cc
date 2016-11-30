@@ -254,6 +254,8 @@ bool debListParser::NewVersion(pkgCache::VerIterator &Ver)
    
    if (ParseProvides(Ver) == false)
       return false;
+   if (ParseTag(Ver) == false)
+      return false;
    
    return true;
 }
@@ -986,6 +988,46 @@ bool debListParser::ParseProvides(pkgCache::VerIterator &Ver)
 	    return false;
       }
    }
+   return true;
+}
+									/*}}}*/
+// ListParser::ParseTag - Parse the tag list				/*{{{*/
+// ---------------------------------------------------------------------
+/* */
+bool debListParser::ParseTag(pkgCache::VerIterator &Ver)
+{
+   const char *Start;
+   const char *Stop;
+   if (Section.Find("Tag",Start,Stop) == false)
+      return true;
+
+   while (1) {
+      while (1) {
+         if (Start == Stop)
+            return true;
+         if (Stop[-1] != ' ' && Stop[-1] != '\t')
+            break;
+         --Stop;
+      }
+
+      const char *Begin = Stop - 1;
+      while (Begin != Start && Begin[-1] != ' ' && Begin[-1] != ',')
+         --Begin;
+
+      if (NewTag(Ver, Begin, Stop - Begin) == false)
+         return false;
+
+      while (1) {
+         if (Begin == Start)
+            return true;
+         if (Begin[-1] == ',')
+            break;
+         --Begin;
+      }
+
+      Stop = Begin - 1;
+   }
+
    return true;
 }
 									/*}}}*/

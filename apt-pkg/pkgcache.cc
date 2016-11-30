@@ -153,6 +153,7 @@ bool pkgCache::ReMap(bool const &Errorchecks)
    VerP = (Version *)Map.Data();
    DescP = (Description *)Map.Data();
    ProvideP = (Provides *)Map.Data();
+   TagP = (Tag *)Map.Data();
    DepP = (Dependency *)Map.Data();
    DepDataP = (DependencyData *)Map.Data();
    StrP = (char *)Map.Data();
