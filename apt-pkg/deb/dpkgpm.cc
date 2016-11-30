@@ -1403,7 +1403,9 @@ static void cleanUpTmpDir(char * const tmpdir)				/*{{{*/
 	 if (unlikely(Ent->d_type != DT_LNK && Ent->d_type != DT_UNKNOWN))
 	    continue;
 #endif
-	 if (unlikely(unlinkat(dfd, Ent->d_name, 0) != 0))
+	 char path[strlen(tmpdir) + 1 + strlen(Ent->d_name) + 1];
+	 sprintf(path, "%s/%s", tmpdir, Ent->d_name);
+	 if (unlikely(unlink(path) != 0))
 	    break;
       }
       closedir(D);
