@@ -249,8 +249,10 @@ bool pkgCacheGenerator::MergeList(ListParser &List,
    while (List.Step() == true)
    {
       string const PackageName = List.Package();
-      if (PackageName.empty() == true)
-	 return false;
+      if (PackageName.empty() == true) {
+          _error->Warning("Encountered a section with no Package: header");
+          continue;
+      }
 
       Counter++;
       if (Counter % 100 == 0 && Progress != 0)
@@ -264,24 +266,26 @@ bool pkgCacheGenerator::MergeList(ListParser &List,
       {
 	 // package descriptions
 	 if (MergeListGroup(List, PackageName) == false)
-	    return false;
+	    continue;
 	 continue;
       }
 
       // Get a pointer to the package structure
       pkgCache::PkgIterator Pkg;
       Dynamic<pkgCache::PkgIterator> DynPkg(Pkg);
-      if (NewPackage(Pkg, PackageName, Arch) == false)
+      if (NewPackage(Pkg, PackageName, Arch) == false) {
 	 // TRANSLATOR: The first placeholder is a package name,
 	 // the other two should be copied verbatim as they include debug info
-	 return _error->Error(_("Error occurred while processing %s (%s%d)"),
+	 _error->Warning(_("Error occurred while processing %s (%s%d)"),
 			      PackageName.c_str(), "NewPackage", 1);
+         continue;
+      }
 
 
       if (Version.empty() == true)
       {
 	 if (MergeListPackage(List, Pkg) == false)
-	    return false;
+	    continue;
       }
       else
       {
@@ -336,7 +340,7 @@ bool pkgCacheGenerator::MergeListPackage(ListParser &List, pkgCache::PkgIterator
    pkgCache::VerIterator Ver(Cache);
    Dynamic<pkgCache::VerIterator> DynVer(Ver);
    if (List.UsePackage(Pkg, Ver) == false)
-      return _error->Error(_("Error occurred while processing %s (%s%d)"),
+      return _error->Warning(_("Error occurred while processing %s (%s%d)"),
 			   Pkg.Name(), "UsePackage", 1);
 
    // Find the right version to write the description
@@ -415,11 +419,11 @@ bool pkgCacheGenerator::MergeListVersion(ListParser &List, pkgCache::PkgIterator
       if (Res == 0 && Ver.end() == false && Ver->Hash == Hash)
       {
 	 if (List.UsePackage(Pkg,Ver) == false)
-	    return _error->Error(_("Error occurred while processing %s (%s%d)"),
+	    return _error->Warning(_("Error occurred while processing %s (%s%d)"),
 				 Pkg.Name(), "UsePackage", 2);
 
 	 if (NewFileVer(Ver,List) == false)
-	    return _error->Error(_("Error occurred while processing %s (%s%d)"),
+	    return _error->Warning(_("Error occurred while processing %s (%s%d)"),
 				 Pkg.Name(), "NewFileVer", 1);
 
 	 // Read only a single record and return
@@ -436,7 +440,7 @@ bool pkgCacheGenerator::MergeListVersion(ListParser &List, pkgCache::PkgIterator
    // Add a new version
    map_pointer_t const verindex = NewVersion(Ver, Version, Pkg.Index(), Hash, *LastVer);
    if (unlikely(verindex == 0))
-      return _error->Error(_("Error occurred while processing %s (%s%d)"),
+      return _error->Warning(_("Error occurred while processing %s (%s%d)"),
 			   Pkg.Name(), "NewVersion", 1);
 
    if (oldMap != Map.Data())
@@ -444,15 +448,15 @@ bool pkgCacheGenerator::MergeListVersion(ListParser &List, pkgCache::PkgIterator
    *LastVer = verindex;
 
    if (unlikely(List.NewVersion(Ver) == false))
-      return _error->Error(_("Error occurred while processing %s (%s%d)"),
+      return _error->Warning(_("Error occurred while processing %s (%s%d)"),
 			   Pkg.Name(), "NewVersion", 2);
 
    if (unlikely(List.UsePackage(Pkg,Ver) == false))
-      return _error->Error(_("Error occurred while processing %s (%s%d)"),
+      return _error->Warning(_("Error occurred while processing %s (%s%d)"),
 			   Pkg.Name(), "UsePackage", 3);
 
    if (unlikely(NewFileVer(Ver,List) == false))
-      return _error->Error(_("Error occurred while processing %s (%s%d)"),
+      return _error->Warning(_("Error occurred while processing %s (%s%d)"),
 			   Pkg.Name(), "NewFileVer", 2);
 
    pkgCache::GrpIterator Grp = Pkg.Group();
@@ -473,12 +477,12 @@ bool pkgCacheGenerator::MergeListVersion(ListParser &List, pkgCache::PkgIterator
 	 Dynamic<pkgCache::VerIterator> DynV(V);
 	 for (; V.end() != true; ++V)
 	    if (unlikely(AddImplicitDepends(V, Pkg) == false))
-	       return _error->Error(_("Error occurred while processing %s (%s%d)"),
+	       return _error->Warning(_("Error occurred while processing %s (%s%d)"),
 				    Pkg.Name(), "AddImplicitDepends", 1);
       }
    }
    if (unlikely(AddImplicitDepends(Grp, Pkg, Ver) == false))
-      return _error->Error(_("Error occurred while processing %s (%s%d)"),
+      return _error->Warning(_("Error occurred while processing %s (%s%d)"),
 			   Pkg.Name(), "AddImplicitDepends", 2);
 
    // Read only a single record and return
@@ -522,7 +526,7 @@ bool pkgCacheGenerator::AddNewDescription(ListParser &List, pkgCache::VerIterato
 
    map_pointer_t const descindex = NewDescription(Desc, lang, CurMd5, md5idx);
    if (unlikely(descindex == 0))
-      return _error->Error(_("Error occurred while processing %s (%s%d)"),
+      return _error->Warning(_("Error occurred while processing %s (%s%d)"),
 	    Ver.ParentPkg().Name(), "NewDescription", 1);
 
    md5idx = Desc->md5sum;
@@ -536,7 +540,7 @@ bool pkgCacheGenerator::AddNewDescription(ListParser &List, pkgCache::VerIterato
    *LastNextDesc = descindex;
 
    if (NewFileDesc(Desc,List) == false)
-      return _error->Error(_("Error occurred while processing %s (%s%d)"),
+      return _error->Warning(_("Error occurred while processing %s (%s%d)"),
 	    Ver.ParentPkg().Name(), "NewFileDesc", 1);
 
    return true;
@@ -1592,7 +1596,7 @@ static bool BuildCache(pkgCacheGenerator &Gen,
 	 }
 
 	 if ((*i)->Merge(Gen, Progress) == false)
-	    return false;
+	    continue;
 
 	 std::vector <pkgIndexFile *> *Indexes = (*i)->GetIndexFiles();
 	 if (Indexes != NULL)

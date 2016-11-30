@@ -860,8 +860,10 @@ bool debListParser::ParseDepends(pkgCache::VerIterator &Ver,
       unsigned int Op;
 
       Start = ParseDepends(Start, Stop, Package, Version, Op, false, false, false, myArch);
-      if (Start == 0)
-	 return _error->Error("Problem parsing dependency %zu",static_cast<size_t>(Key)); // TODO
+      if (Start == 0) {
+	 _error->Warning("Problem parsing dependency %zu",static_cast<size_t>(Key)); // TODO
+         continue;
+      }
       size_t const found = Package.rfind(':');
 
       if (found == string::npos)
@@ -928,8 +930,10 @@ bool debListParser::ParseProvides(pkgCache::VerIterator &Ver)
       {
 	 Start = ParseDepends(Start,Stop,Package,Version,Op, false, false, false);
 	 const size_t archfound = Package.rfind(':');
-	 if (Start == 0)
-	    return _error->Error("Problem parsing Provides line");
+	 if (Start == 0) {
+	    _error->Warning("Problem parsing Provides line");
+            continue;
+         }
 	 if (unlikely(Op != pkgCache::Dep::NoOp && Op != pkgCache::Dep::Equals)) {
 	    _error->Warning("Ignoring Provides line with non-equal DepCompareOp for package %s", Package.to_string().c_str());
 	 } else if (archfound != string::npos) {

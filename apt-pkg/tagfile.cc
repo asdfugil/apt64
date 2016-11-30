@@ -214,7 +214,7 @@ bool pkgTagFile::Step(pkgTagSection &Tag)
 	    break;
 
 	 if (Resize() == false)
-	    return _error->Error(_("Unable to parse package file %s (%d)"),
+	    return _error->Warning(_("Unable to parse package file %s (%d)"),
 		  d->Fd->Name().c_str(), 1);
 
       } while (Tag.Scan(d->Start,d->End - d->Start, false) == false);
