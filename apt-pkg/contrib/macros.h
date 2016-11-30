@@ -119,7 +119,7 @@
 #ifndef APT_10_CLEANER_HEADERS
 #if APT_GCC_VERSION >= 0x0300
 	#define __must_check	__attribute__ ((warn_unused_result))
-	#define __deprecated	__attribute__ ((deprecated))
+	#define __deprecated	__attribute__((deprecated))
 	#define __attrib_const	__attribute__ ((__const__))
 	#define __like_printf(n)	__attribute__((format(printf, n, n + 1)))
 #else
