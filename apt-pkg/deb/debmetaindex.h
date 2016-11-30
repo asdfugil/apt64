@@ -34,8 +34,8 @@ class APT_HIDDEN debReleaseIndex : public metaIndex
    APT_HIDDEN std::string MetaIndexFile(const char *Types) const;
    APT_HIDDEN std::string MetaIndexURI(const char *Type) const;
 
-   debReleaseIndex(std::string const &URI, std::string const &Dist, std::map<std::string,std::string> const &Options);
-   debReleaseIndex(std::string const &URI, std::string const &Dist, bool const Trusted, std::map<std::string,std::string> const &Options);
+   debReleaseIndex(std::string const &URI, std::string const &Dist, std::map<std::string,std::string> const &Options = std::map<std::string,std::string>());
+   debReleaseIndex(std::string const &URI, std::string const &Dist, bool const Trusted, std::map<std::string,std::string> const &Options = std::map<std::string,std::string>());
    virtual ~debReleaseIndex();
 
    virtual std::string ArchiveURI(std::string const &File) const APT_OVERRIDE {return URI + File;};
