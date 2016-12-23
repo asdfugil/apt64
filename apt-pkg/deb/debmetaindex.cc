@@ -532,10 +532,7 @@ bool debReleaseIndex::Load(std::string const &Filename, std::string * const Erro
 
    std::string const StrDate = Section.FindS("Date");
    if (RFC1123StrToTime(StrDate.c_str(), Date) == false)
-   {
-      _error->Warning( _("Invalid '%s' entry in Release file %s"), "Date", Filename.c_str());
       Date = 0;
-   }
 
    bool CheckDate = _config->FindB("Acquire::Check-Date", true);
    if (d->CheckDate == metaIndex::TRI_NO)
@@ -565,6 +562,9 @@ bool debReleaseIndex::Load(std::string const &Filename, std::string * const Erro
 
       if (CheckValidUntil == true)
       {
+	 if (Date == 0)
+	    _error->Warning( _("Invalid '%s' entry in Release file %s"), "Date", Filename.c_str());
+
 	 std::string const StrValidUntil = Section.FindS("Valid-Until");
 
 	 // if we have a Valid-Until header in the Release file, use it as default
