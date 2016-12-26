@@ -524,9 +524,9 @@ bool debReleaseIndex::Load(std::string const &Filename, std::string * const Erro
 
    bool AuthPossible = false;
    if(FoundHashSum == false)
-      _error->Warning(_("No Hash entry in Release file %s"), Filename.c_str());
+      /*_error->Warning(_("No Hash entry in Release file %s"), Filename.c_str())*/;
    else if(FoundStrongHashSum == false)
-      _error->Warning(_("No Hash entry in Release file %s which is considered strong enough for security purposes"), Filename.c_str());
+      /*_error->Warning(_("No Hash entry in Release file %s which is considered strong enough for security purposes"), Filename.c_str())*/;
    else
       AuthPossible = true;
 

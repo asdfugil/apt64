@@ -257,7 +257,7 @@ static bool APT_NONNULL(3, 4, 5) AllowInsecureRepositories(InsecureType const ms
 
    if (TargetIsAllowedToBe(TransactionManager->Target, msg) == true)
    {
-      MessageInsecureRepository(false, msgstr, repo);
+      //MessageInsecureRepository(false, msgstr, repo);
       return true;
    }
 
