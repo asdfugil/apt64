@@ -1294,7 +1294,6 @@ libapt-pkg.so.5.0 libapt-pkg5.0 #MINVER#
  (c++)"pkgTagSection::Tag::Rename(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@APTPKG_5.0" 1.1~exp9
  (c++)"pkgTagSection::Tag::Rewrite(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@APTPKG_5.0" 1.1~exp9
  (c++)"pkgTagSection::Write(FileFd&, char const* const*, std::vector<pkgTagSection::Tag, std::allocator<pkgTagSection::Tag> > const&) const@APTPKG_5.0" 1.1~exp9
- (c++)"pkgUserTagSection::TrimRecord(bool, char const*&)@APTPKG_5.0" 1.1~exp9
  (c++)"pkgVersioningSystem::~pkgVersioningSystem()@APTPKG_5.0" 1.1~exp9
  (c++)"SigVerify::~SigVerify()@APTPKG_5.0" 1.1~exp9
  (c++)"SigVerify::SigVerify()@APTPKG_5.0" 1.1~exp9
@@ -1323,7 +1322,6 @@ libapt-pkg.so.5.0 libapt-pkg5.0 #MINVER#
  (c++)"typeinfo for pkgProblemResolver@APTPKG_5.0" 1.1~exp9
  (c++)"typeinfo for pkgRecords@APTPKG_5.0" 1.1~exp9
  (c++)"typeinfo for pkgSourceList@APTPKG_5.0" 1.1~exp9
- (c++)"typeinfo for pkgUserTagSection@APTPKG_5.0" 1.1~exp9
  (c++)"typeinfo for SigVerify@APTPKG_5.0" 1.1~exp9
  (c++)"typeinfo for TranslationsCopy@APTPKG_5.0" 1.1~exp9
  (c++)"typeinfo name for APT::PackageUniverse@APTPKG_5.0" 1.1~exp9
@@ -1347,7 +1345,6 @@ libapt-pkg.so.5.0 libapt-pkg5.0 #MINVER#
  (c++)"typeinfo name for pkgProblemResolver@APTPKG_5.0" 1.1~exp9
  (c++)"typeinfo name for pkgRecords@APTPKG_5.0" 1.1~exp9
  (c++)"typeinfo name for pkgSourceList@APTPKG_5.0" 1.1~exp9
- (c++)"typeinfo name for pkgUserTagSection@APTPKG_5.0" 1.1~exp9
  (c++)"typeinfo name for SigVerify@APTPKG_5.0" 1.1~exp9
  (c++)"typeinfo name for TranslationsCopy@APTPKG_5.0" 1.1~exp9
  (c++)"URI::ArchiveOnly(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@APTPKG_5.0" 1.1~exp9
@@ -1372,7 +1369,6 @@ libapt-pkg.so.5.0 libapt-pkg5.0 #MINVER#
  (c++)"vtable for pkgProblemResolver@APTPKG_5.0" 1.1~exp9
  (c++)"vtable for pkgRecords@APTPKG_5.0" 1.1~exp9
  (c++)"vtable for pkgSourceList@APTPKG_5.0" 1.1~exp9
- (c++)"vtable for pkgUserTagSection@APTPKG_5.0" 1.1~exp9
  (c++)"vtable for SigVerify@APTPKG_5.0" 1.1~exp9
  (c++)"vtable for TranslationsCopy@APTPKG_5.0" 1.1~exp9
 ### dpkg selection state changer & general dpkg interfacing

@@ -33,7 +33,7 @@ using std::string;
 // RecordParser::debRecordParser - Constructor				/*{{{*/
 debRecordParser::debRecordParser(string FileName,pkgCache &Cache) :
    debRecordParserBase(), d(NULL), File(FileName, FileFd::ReadOnly, FileFd::Extension),
-   Tags(&File, std::max(Cache.Head().MaxVerFileSize, Cache.Head().MaxDescFileSize) + 200)
+   Tags(&File)
 {
 }
 									/*}}}*/
@@ -230,7 +230,7 @@ bool debDebFileRecordParser::LoadContent()
    content << "\n\n";
 
    controlContent = content.str();
-   if (Section.Scan(controlContent.c_str(), controlContent.length()) == false)
+   if (Section.Scan(controlContent.c_str(), controlContent.length(), false) == false)
       return _error->Error(_("Unable to parse package file %s (%d)"), debFileName.c_str(), 3);
    return true;
 }

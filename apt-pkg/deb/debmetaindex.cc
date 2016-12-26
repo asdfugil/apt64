@@ -428,7 +428,7 @@ bool debReleaseIndex::Load(std::string const &Filename, std::string * const Erro
    if (OpenMaybeClearSignedFile(Filename, Fd) == false)
       return false;
 
-   pkgTagFile TagFile(&Fd, Fd.Size());
+   pkgTagFile TagFile(&Fd);
    if (Fd.IsOpen() == false || Fd.Failed())
    {
       if (ErrorText != NULL)
@@ -896,7 +896,7 @@ bool debReleaseIndex::Merge(pkgCacheGenerator &Gen,OpProgress * /*Prog*/) const/
    File->Size = Buf.st_size;
    File->mtime = Buf.st_mtime;
 
-   pkgTagFile TagFile(&Rel, Rel.Size());
+   pkgTagFile TagFile(&Rel);
    pkgTagSection Section;
    if (Rel.IsOpen() == false || Rel.Failed() || TagFile.Step(Section) == false)
       return false;

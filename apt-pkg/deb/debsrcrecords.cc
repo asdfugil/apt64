@@ -38,7 +38,7 @@ debSrcRecordParser::debSrcRecordParser(std::string const &File,pkgIndexFile cons
    if (File.empty() == false)
    {
       if (Fd.Open(File, FileFd::ReadOnly, FileFd::Extension))
-	 Tags.Init(&Fd, 102400);
+	 Tags.Init(&Fd);
    }
 }
 std::string debSrcRecordParser::Package() const				/*{{{*/

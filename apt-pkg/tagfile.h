@@ -138,11 +138,10 @@ class pkgTagSection
     * @return \b true if section end was found, \b false otherwise.
     *  Beware that internal state will be inconsistent if \b false is returned!
     */
-   APT_MUSTCHECK bool Scan(const char *Start, unsigned long MaxLength, bool const Restart = true);
+   APT_MUSTCHECK bool Scan(const char *Start, unsigned long MaxLength, bool const SupportComments);
 
    inline unsigned long size() const {return Stop - Section;};
-   void Trim();
-   virtual void TrimRecord(bool BeforeRecord, const char* &End);
+   void TrimRecord(bool BeforeRecord, const char* &End, bool SupportComments);
 
    /** \brief amount of Tags in the current section
     *
@@ -187,11 +186,6 @@ class pkgTagSection
 };
 
 
-class APT_DEPRECATED_MSG("Use pkgTagFile with the SUPPORT_COMMENTS flag instead") pkgUserTagSection : public pkgTagSection
-{
-   virtual void TrimRecord(bool BeforeRecord, const char* &End) APT_OVERRIDE;
-};
-
 /** \class pkgTagFile reads and prepares a deb822 formatted file for parsing
  * via #pkgTagSection. The default mode tries to be as fast as possible and
  * assumes perfectly valid (machine generated) files like Packages. Support
@@ -199,10 +193,6 @@ class APT_DEPRECATED_MSG("Use pkgTagFile with the SUPPORT_COMMENTS flag instead"
 class pkgTagFile
 {
    pkgTagFilePrivate * const d;
-
-   APT_HIDDEN bool Fill();
-   APT_HIDDEN bool Resize();
-   APT_HIDDEN bool Resize(unsigned long long const newSize);
 
 public:
 
@@ -216,11 +206,11 @@ public:
       SUPPORT_COMMENTS = 1 << 0,
    };
 
-   void Init(FileFd * const F, pkgTagFile::Flags const Flags, unsigned long long Size = 32*1024);
-   void Init(FileFd * const F,unsigned long long const Size = 32*1024);
+   void Init(FileFd * const F, pkgTagFile::Flags const Flags);
+   void Init(FileFd * const F);
 
-   pkgTagFile(FileFd * const F, pkgTagFile::Flags const Flags, unsigned long long Size = 32*1024);
-   pkgTagFile(FileFd * const F,unsigned long long Size = 32*1024);
+   pkgTagFile(FileFd * const F, pkgTagFile::Flags const Flags);
+   pkgTagFile(FileFd * const F);
    virtual ~pkgTagFile();
 };
 

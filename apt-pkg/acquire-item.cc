@@ -3782,7 +3782,7 @@ std::string pkgAcqChangelog::URITemplate(pkgCache::RlsFileIterator const &Rls)
 	 should be so this could produce request order-dependent anomalies */
       if (OpenMaybeClearSignedFile(Rls.FileName(), rf) == true)
       {
-	 pkgTagFile TagFile(&rf, rf.Size());
+	 pkgTagFile TagFile(&rf);
 	 pkgTagSection Section;
 	 if (TagFile.Step(Section) == true)
 	    server = Section.FindS("Changelogs");

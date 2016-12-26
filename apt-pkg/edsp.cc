@@ -628,7 +628,7 @@ bool EDSP::ReadResponse(int const input, pkgDepCache &Cache, OpProgress *Progres
 
 	FileFd in;
 	in.OpenDescriptor(input, FileFd::ReadOnly, true);
-	pkgTagFile response(&in, 100);
+	pkgTagFile response(&in);
 	pkgTagSection section;
 
 	std::set<decltype(Cache.PkgBegin()->ID)> seenOnce;
@@ -1336,7 +1336,7 @@ bool EIPP::ReadResponse(int const input, pkgPackageManager * const PM, OpProgres
 
    FileFd in;
    in.OpenDescriptor(input, FileFd::ReadOnly);
-   pkgTagFile response(&in, 100);
+   pkgTagFile response(&in);
    pkgTagSection section;
 
    while (response.Step(section) == true) {

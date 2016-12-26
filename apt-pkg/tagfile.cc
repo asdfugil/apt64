@@ -12,6 +12,9 @@
 // Include Files							/*{{{*/
 #include <config.h>
 
+#include <apt-pkg/mmap.h>
+#include <apt-pkg/tagfile.h>
+#include <apt-pkg/tagfile-keys.h>
 #include <apt-pkg/error.h>
 #include <apt-pkg/fileutl.h>
 #include <apt-pkg/string_view.h>
@@ -36,10 +39,11 @@ using APT::StringView;
 class APT_HIDDEN pkgTagFilePrivate					/*{{{*/
 {
 public:
-   void Reset(FileFd * const pFd, unsigned long long const pSize, pkgTagFile::Flags const pFlags)
+   void Reset(FileFd * const pFd, pkgTagFile::Flags const pFlags)
    {
-      if (Buffer != NULL)
-	 free(Buffer);
+      if (Map != NULL)
+         delete Map;
+      Map = NULL;
       Buffer = NULL;
       Fd = pFd;
       Flags = pFlags;
@@ -47,14 +51,11 @@ public:
       End = NULL;
       Done = false;
       iOffset = 0;
-      Size = pSize;
-      isCommentedLine = false;
-      chunks.clear();
    }
 
-   pkgTagFilePrivate(FileFd * const pFd, unsigned long long const Size, pkgTagFile::Flags const pFlags) : Buffer(NULL)
+   pkgTagFilePrivate(FileFd * const pFd, pkgTagFile::Flags const pFlags) : Map(NULL)
    {
-      Reset(pFd, Size, pFlags);
+      Reset(pFd, pFlags);
    }
    FileFd * Fd;
    pkgTagFile::Flags Flags;
@@ -63,20 +64,12 @@ public:
    char *End;
    bool Done;
    unsigned long long iOffset;
-   unsigned long long Size;
-   bool isCommentedLine;
-   struct FileChunk
-   {
-      bool const good;
-      size_t length;
-      FileChunk(bool const pgood, size_t const plength) : good(pgood), length(plength) {}
-   };
-   std::list<FileChunk> chunks;
+   MMap *Map;
 
    ~pkgTagFilePrivate()
    {
-      if (Buffer != NULL)
-	 free(Buffer);
+      if (Map != NULL)
+         delete Map;
    }
 };
 									/*}}}*/
@@ -115,42 +108,38 @@ static unsigned long BetaHash(const char *Text, size_t Length)		/*{{{*/
 									/*}}}*/
 
 // TagFile::pkgTagFile - Constructor					/*{{{*/
-pkgTagFile::pkgTagFile(FileFd * const pFd,pkgTagFile::Flags const pFlags, unsigned long long const Size)
-   : d(new pkgTagFilePrivate(pFd, Size + 4, pFlags))
+pkgTagFile::pkgTagFile(FileFd * const pFd,pkgTagFile::Flags const pFlags)
+   : d(new pkgTagFilePrivate(pFd, pFlags))
 {
-   Init(pFd, pFlags, Size);
+   Init(pFd, pFlags);
 }
-pkgTagFile::pkgTagFile(FileFd * const pFd,unsigned long long const Size)
-   : pkgTagFile(pFd, pkgTagFile::STRICT, Size)
+pkgTagFile::pkgTagFile(FileFd * const pFd)
+   : pkgTagFile(pFd, pkgTagFile::STRICT)
 {
 }
-void pkgTagFile::Init(FileFd * const pFd, pkgTagFile::Flags const pFlags, unsigned long long Size)
+void pkgTagFile::Init(FileFd * const pFd, pkgTagFile::Flags const pFlags)
 {
-   /* The size is increased by 4 because if we start with the Size of the
-      filename we need to try to read 1 char more to see an EOF faster, 1
-      char the end-pointer can be on and maybe 2 newlines need to be added
-      to the end of the file -> 4 extra chars */
-   Size += 4;
-   d->Reset(pFd, Size, pFlags);
+   d->Reset(pFd, pFlags);
 
-   if (d->Fd->IsOpen() == false)
-      d->Start = d->End = d->Buffer = 0;
-   else
-      d->Buffer = (char*)malloc(sizeof(char) * Size);
+   if (d->Fd->IsOpen() == false || d->Fd->Size() == 0)
+      _error->Discard();
+   else {
+      d->Map = new MMap(*d->Fd, MMap::ReadOnly);
+      d->Buffer = static_cast<char *>(d->Map->Data());
+   }
 
    if (d->Buffer == NULL)
       d->Done = true;
-   else
+   else {
       d->Done = false;
+      d->End = d->Buffer + d->Map->Size();
+   }
 
-   d->Start = d->End = d->Buffer;
-   d->iOffset = 0;
-   if (d->Done == false)
-      Fill();
+   d->Start = d->Buffer;
 }
-void pkgTagFile::Init(FileFd * const pFd,unsigned long long Size)
+void pkgTagFile::Init(FileFd * const pFd)
 {
-   Init(pFd, pkgTagFile::STRICT, Size);
+   Init(pFd, pkgTagFile::STRICT);
 }
 									/*}}}*/
 // TagFile::~pkgTagFile - Destructor					/*{{{*/
@@ -165,36 +154,6 @@ APT_PURE unsigned long pkgTagFile::Offset()
    return d->iOffset;
 }
 									/*}}}*/
-// TagFile::Resize - Resize the internal buffer				/*{{{*/
-// ---------------------------------------------------------------------
-/* Resize the internal buffer (double it in size). Fail if a maximum size
- * size is reached.
- */
-bool pkgTagFile::Resize()
-{
-   // fail is the buffer grows too big
-   if(d->Size > 1024*1024+1)
-      return false;
-
-   return Resize(d->Size * 2);
-}
-bool pkgTagFile::Resize(unsigned long long const newSize)
-{
-   unsigned long long const EndSize = d->End - d->Start;
-
-   // get new buffer and use it
-   char* const newBuffer = static_cast<char*>(realloc(d->Buffer, sizeof(char) * newSize));
-   if (newBuffer == NULL)
-      return false;
-   d->Buffer = newBuffer;
-   d->Size = newSize;
-
-   // update the start/end pointers to the new buffer
-   d->Start = d->Buffer;
-   d->End = d->Start + EndSize;
-   return true;
-}
-									/*}}}*/
 // TagFile::Step - Advance to the next section				/*{{{*/
 // ---------------------------------------------------------------------
 /* If the Section Scanner fails we refill the buffer and try again. 
@@ -203,225 +162,18 @@ bool pkgTagFile::Resize(unsigned long long const newSize)
  */
 bool pkgTagFile::Step(pkgTagSection &Tag)
 {
-   if(Tag.Scan(d->Start,d->End - d->Start) == false)
+   if(Tag.Scan(d->Start,d->End - d->Start,(d->Flags & SUPPORT_COMMENTS) != 0) == false)
    {
-      do
-      {
-	 if (Fill() == false)
-	    return false;
-
-	 if(Tag.Scan(d->Start,d->End - d->Start, false))
-	    break;
-
-	 if (Resize() == false)
+      if (d->Start == d->End)
+         return false;
+      else
 	    return _error->Warning(_("Unable to parse package file %s (%d)"),
 		  d->Fd->Name().c_str(), 1);
-
-      } while (Tag.Scan(d->Start,d->End - d->Start, false) == false);
    }
 
    size_t tagSize = Tag.size();
    d->Start += tagSize;
-
-   if ((d->Flags & pkgTagFile::SUPPORT_COMMENTS) == 0)
-      d->iOffset += tagSize;
-   else
-   {
-      auto first = d->chunks.begin();
-      for (; first != d->chunks.end(); ++first)
-      {
-	 if (first->good == false)
-	    d->iOffset += first->length;
-	 else
-	 {
-	    if (tagSize < first->length)
-	    {
-	       first->length -= tagSize;
-	       d->iOffset += tagSize;
-	       break;
-	    }
-	    else
-	    {
-	       tagSize -= first->length;
-	       d->iOffset += first->length;
-	    }
-	 }
-      }
-      d->chunks.erase(d->chunks.begin(), first);
-   }
-
-   if ((d->Flags & pkgTagFile::SUPPORT_COMMENTS) == 0 || Tag.Count() != 0)
-   {
-      Tag.Trim();
-      return true;
-   }
-   return Step(Tag);
-}
-									/*}}}*/
-// TagFile::Fill - Top up the buffer					/*{{{*/
-// ---------------------------------------------------------------------
-/* This takes the bit at the end of the buffer and puts it at the start
-   then fills the rest from the file */
-static bool FillBuffer(pkgTagFilePrivate * const d)
-{
-   unsigned long long Actual = 0;
-   // See if only a bit of the file is left
-   unsigned long long const dataSize = d->Size - ((d->End - d->Buffer) + 1);
-   if (d->Fd->Read(d->End, dataSize, &Actual) == false)
-      return false;
-   if (Actual != dataSize)
-      d->Done = true;
-   d->End += Actual;
-   return true;
-}
-static void RemoveCommentsFromBuffer(pkgTagFilePrivate * const d)
-{
-   // look for valid comments in the buffer
-   char * good_start = nullptr, * bad_start = nullptr;
-   char * current = d->Start;
-   if (d->isCommentedLine == false)
-   {
-      if (d->Start == d->Buffer)
-      {
-	 // the start of the buffer is a newline as a record can't start
-	 // in the middle of a line by definition.
-	 if (*d->Start == '#')
-	 {
-	    d->isCommentedLine = true;
-	    ++current;
-	    if (current > d->End)
-	       d->chunks.emplace_back(false, 1);
-	 }
-      }
-      if (d->isCommentedLine == false)
-	 good_start = d->Start;
-      else
-	 bad_start = d->Start;
-   }
-   else
-      bad_start = d->Start;
-
-   std::vector<std::pair<char*, size_t>> good_parts;
-   while (current <= d->End)
-   {
-      size_t const restLength = (d->End - current);
-      if (d->isCommentedLine == false)
-      {
-	 current = static_cast<char*>(memchr(current, '#', restLength));
-	 if (current == nullptr)
-	 {
-	    size_t const goodLength = d->End - good_start;
-	    d->chunks.emplace_back(true, goodLength);
-	    if (good_start != d->Start)
-	       good_parts.push_back(std::make_pair(good_start, goodLength));
-	    break;
-	 }
-	 bad_start = current;
-	 --current;
-	 // ensure that this is really a comment and not a '#' in the middle of a line
-	 if (*current == '\n')
-	 {
-	    size_t const goodLength = (current - good_start) + 1;
-	    d->chunks.emplace_back(true, goodLength);
-	    good_parts.push_back(std::make_pair(good_start, goodLength));
-	    good_start = nullptr;
-	    d->isCommentedLine = true;
-	 }
-	 current += 2;
-      }
-      else // the current line is a comment
-      {
-	 current = static_cast<char*>(memchr(current, '\n', restLength));
-	 if (current == nullptr)
-	 {
-	    d->chunks.emplace_back(false, (d->End - bad_start));
-	    break;
-	 }
-	 ++current;
-	 // is the next line a comment, too?
-	 if (current >= d->End || *current != '#')
-	 {
-	    d->chunks.emplace_back(false, (current - bad_start));
-	    good_start = current;
-	    bad_start = nullptr;
-	    d->isCommentedLine = false;
-	 }
-	 ++current;
-      }
-   }
-
-   if (good_parts.empty() == false)
-   {
-      // we found comments, so move later parts over them
-      current = d->Start;
-      for (auto const &good: good_parts)
-      {
-	 memmove(current, good.first, good.second);
-	 current += good.second;
-      }
-      d->End = current;
-   }
-
-   if (d->isCommentedLine == true)
-   {
-      // deal with a buffer containing only comments
-      // or an (unfinished) comment at the end
-      if (good_parts.empty() == true)
-	 d->End = d->Start;
-      else
-	 d->Start = d->End;
-   }
-   else
-   {
-      // the buffer was all comment, but ended with the buffer
-      if (good_parts.empty() == true && good_start >= d->End)
-	 d->End = d->Start;
-      else
-	 d->Start = d->End;
-   }
-}
-bool pkgTagFile::Fill()
-{
-   unsigned long long const EndSize = d->End - d->Start;
-   if (EndSize != 0)
-   {
-      memmove(d->Buffer,d->Start,EndSize);
-      d->Start = d->End = d->Buffer + EndSize;
-   }
-   else
-      d->Start = d->End = d->Buffer;
-
-   unsigned long long Actual = 0;
-   while (d->Done == false && d->Size > (Actual + 1))
-   {
-      if (FillBuffer(d) == false)
-	 return false;
-      if ((d->Flags & pkgTagFile::SUPPORT_COMMENTS) != 0)
-	 RemoveCommentsFromBuffer(d);
-      Actual = d->End - d->Buffer;
-   }
-   d->Start = d->Buffer;
-
-   if (d->Done == true)
-   {
-      if (EndSize <= 3 && Actual == 0)
-	 return false;
-      if (d->Size - (d->End - d->Buffer) < 4)
-	 return true;
-
-      // Append a double new line if one does not exist
-      unsigned int LineCount = 0;
-      for (const char *E = d->End - 1; E - d->End < 6 && (*E == '\n' || *E == '\r'); E--)
-	 if (*E == '\n')
-	    ++LineCount;
-      if (LineCount < 2)
-      {
-	 if (static_cast<unsigned long long>(d->End - d->Buffer) >= d->Size)
-	    Resize(d->Size + 3);
-	 for (; LineCount < 2; ++LineCount)
-	    *d->End++ = '\n';
-      }
-   }
+   d->iOffset += tagSize;
    return true;
 }
 									/*}}}*/
@@ -431,43 +183,16 @@ bool pkgTagFile::Fill()
    that is there */
 bool pkgTagFile::Jump(pkgTagSection &Tag,unsigned long long Offset)
 {
-   if ((d->Flags & pkgTagFile::SUPPORT_COMMENTS) == 0 &&
-   // We are within a buffer space of the next hit..
-	 Offset >= d->iOffset && d->iOffset + (d->End - d->Start) > Offset)
-   {
-      unsigned long long Dist = Offset - d->iOffset;
-      d->Start += Dist;
-      d->iOffset += Dist;
-      // if we have seen the end, don't ask for more
-      if (d->Done == true)
-	 return Tag.Scan(d->Start, d->End - d->Start);
-      else
-	 return Step(Tag);
-   }
+   unsigned int Size(d->Map->Size());
+   if (Offset >= Size)
+      return false;
 
    // Reposition and reload..
    d->iOffset = Offset;
    d->Done = false;
-   if (d->Fd->Seek(Offset) == false)
-      return false;
-   d->End = d->Start = d->Buffer;
-   d->isCommentedLine = false;
-   d->chunks.clear();
+   d->Start = d->Buffer + d->iOffset;
 
-   if (Fill() == false)
-      return false;
-
-   if (Tag.Scan(d->Start, d->End - d->Start) == true)
-      return true;
-   
-   // This appends a double new line (for the real eof handling)
-   if (Fill() == false)
-      return false;
-   
-   if (Tag.Scan(d->Start, d->End - d->Start, false) == false)
-      return _error->Error(_("Unable to parse package file %s (%d)"),d->Fd->Name().c_str(), 2);
-   
-   return true;
+   return Step(Tag);
 }
 									/*}}}*/
 // pkgTagSection::pkgTagSection - Constructor				/*{{{*/
@@ -483,32 +208,20 @@ pkgTagSection::pkgTagSection()
 APT_IGNORE_DEPRECATED_POP
 									/*}}}*/
 // TagSection::Scan - Scan for the end of the header information	/*{{{*/
-bool pkgTagSection::Scan(const char *Start,unsigned long MaxLength, bool const Restart)
+bool pkgTagSection::Scan(const char *Start,unsigned long MaxLength,bool const SupportComments)
 {
    Section = Start;
    const char *End = Start + MaxLength;
 
-   if (Restart == false && d->Tags.empty() == false)
+   Stop = Section;
+   if (d->Tags.empty() == false)
    {
-      Stop = Section + d->Tags.back().StartTag;
-      if (End <= Stop)
-	 return false;
-      Stop = (const char *)memchr(Stop,'\n',End - Stop);
-      if (Stop == NULL)
-	 return false;
-      ++Stop;
+      memset(&AlphaIndexes, 0, sizeof(AlphaIndexes));
+      memset(&BetaIndexes, 0, sizeof(BetaIndexes));
+      d->Tags.clear();
    }
-   else
-   {
-      Stop = Section;
-      if (d->Tags.empty() == false)
-      {
-	 memset(&AlphaIndexes, 0, sizeof(AlphaIndexes));
-	 memset(&BetaIndexes, 0, sizeof(BetaIndexes));
-	 d->Tags.clear();
-      }
-      d->Tags.reserve(0x100);
-   }
+   d->Tags.reserve(0x100);
+
    unsigned int TagCount = d->Tags.size();
 
    if (Stop == 0)
@@ -520,12 +233,12 @@ bool pkgTagSection::Scan(const char *Start,unsigned long MaxLength, bool const R
    unsigned int lastTagHash = 0;
    while (Stop < End)
    {
-      TrimRecord(true,End);
+      TrimRecord(true,End,SupportComments);
 
       // this can happen when TrimRecord trims away the entire Record
       // (e.g. because it just contains comments)
       if(Stop == End)
-         return true;
+         goto end;
 
       // Start a new index and add it to the hash
       if (isspace_ascii(Stop[0]) == 0)
@@ -573,8 +286,10 @@ bool pkgTagSection::Scan(const char *Start,unsigned long MaxLength, bool const R
 
       Stop = (const char *)memchr(Stop,'\n',End - Stop);
 
-      if (Stop == 0)
-	 return false;
+      if (Stop == 0) {
+         Stop = End;
+         goto end;
+      }
 
       for (; Stop+1 < End && Stop[1] == '\r'; Stop++)
          /* nothing */
@@ -582,7 +297,7 @@ bool pkgTagSection::Scan(const char *Start,unsigned long MaxLength, bool const R
 
       // Double newline marks the end of the record
       if (Stop+1 < End && Stop[1] == '\n')
-      {
+      end: {
 	 if (lastTagData.EndTag != 0)
 	 {
 	    if (lastTagKey != Key::Unknown) {
@@ -595,34 +310,32 @@ bool pkgTagSection::Scan(const char *Start,unsigned long MaxLength, bool const R
 	    d->Tags.push_back(lastTagData);
 	 }
 
+         if (d->Tags.empty())
+            return false;
+
 	 pkgTagSectionPrivate::TagData const td(Stop - Section);
 	 d->Tags.push_back(td);
-	 TrimRecord(false,End);
+	 TrimRecord(false,End,SupportComments);
 	 return true;
       }
       
       Stop++;
    }
 
-   return false;
+   goto end;
 }
 									/*}}}*/
 // TagSection::TrimRecord - Trim off any garbage before/after a record	/*{{{*/
 // ---------------------------------------------------------------------
 /* There should be exactly 2 newline at the end of the record, no more. */
-void pkgTagSection::TrimRecord(bool BeforeRecord, const char*& End)
-{
-   if (BeforeRecord == true)
-      return;
-   for (; Stop < End && (Stop[0] == '\n' || Stop[0] == '\r'); Stop++);
-}
-									/*}}}*/
-// TagSection::Trim - Trim off any trailing garbage			/*{{{*/
-// ---------------------------------------------------------------------
-/* There should be exactly 1 newline at the end of the buffer, no more. */
-void pkgTagSection::Trim()
-{
-   for (; Stop > Section + 2 && (Stop[-2] == '\n' || Stop[-2] == '\r'); Stop--);
+void pkgTagSection::TrimRecord(bool BeforeRecord, const char*& End, bool SupportComments)
+{ trim:
+   if (BeforeRecord == false)
+      for (; Stop < End && (Stop[0] == '\n' || Stop[0] == '\r'); Stop++);
+   if (SupportComments && Stop < End && Stop[0] == '#') {
+      Stop = (const char*) memchr(Stop,'\n',End-Stop) ?: End;
+      goto trim;
+   }
 }
 									/*}}}*/
 // TagSection::Exists - return True if a tag exists			/*{{{*/
@@ -1062,14 +775,6 @@ bool pkgTagSection::Write(FileFd &File, char const * const * const Order, std::v
 	 return false;
    }
    return true;
-}
-									/*}}}*/
-
-void pkgUserTagSection::TrimRecord(bool /*BeforeRecord*/, const char* &End)/*{{{*/
-{
-   for (; Stop < End && (Stop[0] == '\n' || Stop[0] == '\r' || Stop[0] == '#'); Stop++)
-      if (Stop[0] == '#')
-	 Stop = (const char*) memchr(Stop,'\n',End-Stop);
 }
 									/*}}}*/
 
