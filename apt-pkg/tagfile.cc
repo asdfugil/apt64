@@ -277,10 +277,8 @@ bool pkgTagSection::Scan(const char *Start,unsigned long MaxLength,bool const Su
 	 // find the beginning of the value
 	 Stop = Colon + 1;
 	 for (; Stop < End && isspace_ascii(*Stop) != 0; ++Stop)
-	    if (*Stop == '\n' && Stop[1] != ' ')
+	    if (*Stop == '\n' && (Stop+1 == End || Stop[1] != ' '))
 	       break;
-	 if (Stop >= End)
-	    return false;
 	 lastTagData.StartValue = Stop - Section;
       }
 
