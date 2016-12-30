@@ -390,7 +390,7 @@ bool pkgTagSection::FindInternal(unsigned int Pos, const char *&Start,
    if (unlikely(Start > End))
       return _error->Error("Internal parsing error");
 
-   for (; isspace_ascii(End[-1]) != 0 && End > Start; --End);
+   for (; End > Start && isspace_ascii(End[-1]) != 0; --End);
 
    return true;
 }
