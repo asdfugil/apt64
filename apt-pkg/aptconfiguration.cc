@@ -200,7 +200,7 @@ std::vector<std::string> const Configuration::getLanguages(bool const &All,
 	// FIXME: Remove support for the old APT::Acquire::Translation
 	// it was undocumented and so it should be not very widthly used
 	string const oldAcquire = _config->Find("APT::Acquire::Translation","");
-	if (oldAcquire.empty() == false && oldAcquire != "environment") {
+	if (oldAcquire.empty() == false && oldAcquire != "environment" && _config->Exists("Acquire::Languages")) {
 		// TRANSLATORS: the two %s are APT configuration options
 		_error->Notice("Option '%s' is deprecated. Please use '%s' instead, see 'man 5 apt.conf' for details.",
 				"APT::Acquire::Translation", "Acquire::Languages");
