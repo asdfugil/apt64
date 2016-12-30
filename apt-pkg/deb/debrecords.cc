@@ -160,7 +160,7 @@ string debRecordParserBase::LongDesc(std::string const &lang)
    }
 
    char const * const codeset = nl_langinfo(CODESET);
-   if (strcmp(codeset,"UTF-8") != 0) {
+   if (strcmp(codeset,"US-ASCII") != 0 && strcmp(codeset,"UTF-8") != 0) {
       string dest;
       UTF8ToCodeset(codeset, orig, &dest);
       return dest;
