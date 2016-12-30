@@ -1553,16 +1553,14 @@ static map_filesize_t ComputeSize(pkgSourceList const * const List, FileIterator
 }
 									/*}}}*/
 // BuildCache - Merge the list of index files into the cache		/*{{{*/
-static bool BuildCache(pkgCacheGenerator &Gen,
+static void BuildCache(pkgCacheGenerator &Gen,
 		       OpProgress * const Progress,
 		       map_filesize_t &CurrentSize,map_filesize_t TotalSize,
 		       pkgSourceList const * const List,
 		       FileIterator const Start, FileIterator const End)
 {
-   bool mergeFailure = false;
-
    auto const indexFileMerge = [&](pkgIndexFile * const I) {
-      if (I->HasPackages() == false || mergeFailure)
+      if (I->HasPackages() == false)
 	 return;
 
       if (I->Exists() == false)
@@ -1581,7 +1579,7 @@ static bool BuildCache(pkgCacheGenerator &Gen,
       CurrentSize += Size;
 
       if (I->Merge(Gen,Progress) == false)
-	 mergeFailure = true;
+	 return;
    };
 
    if (List !=  NULL)
@@ -1601,8 +1599,6 @@ static bool BuildCache(pkgCacheGenerator &Gen,
 	 std::vector <pkgIndexFile *> *Indexes = (*i)->GetIndexFiles();
 	 if (Indexes != NULL)
 	    std::for_each(Indexes->begin(), Indexes->end(), indexFileMerge);
-	 if (mergeFailure)
-	    return false;
       }
    }
 
@@ -1610,10 +1606,7 @@ static bool BuildCache(pkgCacheGenerator &Gen,
    {
       Gen.SelectReleaseFile("", "");
       std::for_each(Start, End, indexFileMerge);
-      if (mergeFailure)
-	 return false;
    }
-   return true;
 }
 									/*}}}*/
 // CacheGenerator::MakeStatusCache - Construct the status cache		/*{{{*/
@@ -1788,9 +1781,8 @@ bool pkgCacheGenerator::MakeStatusCache(pkgSourceList &List,OpProgress *Progress
 	 return false;
 
       TotalSize += ComputeSize(&List, Files.begin(),Files.end());
-      if (BuildCache(*Gen, Progress, CurrentSize, TotalSize, &List,
-	       Files.end(),Files.end()) == false)
-	 return false;
+      BuildCache(*Gen, Progress, CurrentSize, TotalSize, &List,
+	       Files.end(),Files.end());
 
       if (Writeable == true && SrcCacheFileName.empty() == false)
 	 if (writeBackMMapToFile(Gen.get(), Map.get(), SrcCacheFileName) == false)
@@ -1801,9 +1793,8 @@ bool pkgCacheGenerator::MakeStatusCache(pkgSourceList &List,OpProgress *Progress
    {
       if (Debug == true)
 	 std::clog << "Building status cache in pkgcache.bin now" << std::endl;
-      if (BuildCache(*Gen, Progress, CurrentSize, TotalSize, NULL,
-	       Files.begin(), Files.end()) == false)
-	 return false;
+      BuildCache(*Gen, Progress, CurrentSize, TotalSize, NULL,
+	       Files.begin(), Files.end());
 
       if (Writeable == true && CacheFileName.empty() == false)
 	 if (writeBackMMapToFile(Gen.get(), Map.get(), CacheFileName) == false)
@@ -1824,9 +1815,8 @@ bool pkgCacheGenerator::MakeStatusCache(pkgSourceList &List,OpProgress *Progress
       }
 
       Files = List.GetVolatileFiles();
-      if (BuildCache(*Gen, Progress, CurrentSize, TotalSize, NULL,
-	       Files.begin(), Files.end()) == false)
-	 return false;
+      BuildCache(*Gen, Progress, CurrentSize, TotalSize, NULL,
+	       Files.begin(), Files.end());
    }
 
    if (OutMap != nullptr)
@@ -1865,9 +1855,8 @@ bool pkgCacheGenerator::MakeOnlyStatusCache(OpProgress *Progress,DynamicMMap **O
    pkgCacheGenerator Gen(Map.get(),Progress);
    if (Gen.Start() == false || _error->PendingError() == true)
       return false;
-   if (BuildCache(Gen,Progress,CurrentSize,TotalSize, NULL,
-		  Files.begin(), Files.end()) == false)
-      return false;
+   BuildCache(Gen,Progress,CurrentSize,TotalSize, NULL,
+		  Files.begin(), Files.end());
 
    if (_error->PendingError() == true)
       return false;
