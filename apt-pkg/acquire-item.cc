@@ -3275,6 +3275,7 @@ void pkgAcqIndex::StageDownloadDone(string const &Message)
    {
       // copy FinalFile into partial/ so that we check the hash again
       string const FinalFile = GetExistingFilename(GetFinalFileNameFromURI(Target.URI));
+      DestFile = GetKeepCompressedFileName(GetPartialFileNameFromURI(Target.URI), Target);
       if (symlink(FinalFile.c_str(), DestFile.c_str()) != 0)
 	 _error->WarningE("pkgAcqIndex::StageDownloadDone", "Symlinking final file %s back to %s failed", FinalFile.c_str(), DestFile.c_str());
       else
@@ -3283,7 +3284,10 @@ void pkgAcqIndex::StageDownloadDone(string const &Message)
 	 Filename = DestFile;
       }
       Stage = STAGE_DECOMPRESS_AND_VERIFY;
-      Desc.URI = "store:" + Filename;
+      if (Filename != DestFile && flExtension(Filename) == flExtension(DestFile))
+         Desc.URI = "copy:" + Filename;
+      else
+         Desc.URI = "store:" + Filename;
       QueueURI(Desc);
       SetActiveSubprocess(::URI(Desc.URI).Access);
       return;
