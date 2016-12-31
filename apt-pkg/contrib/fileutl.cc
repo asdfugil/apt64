@@ -2210,12 +2210,6 @@ public:
 	       dup2(compressed_fd,STDIN_FILENO);
 	    dup2(Pipe[1],STDOUT_FILENO);
 	 }
-	 int const nullfd = open("/dev/null", O_WRONLY);
-	 if (nullfd != -1)
-	 {
-	    dup2(nullfd,STDERR_FILENO);
-	    close(nullfd);
-	 }
 
 	 SetCloseExec(STDOUT_FILENO,false);
 	 SetCloseExec(STDIN_FILENO,false);
