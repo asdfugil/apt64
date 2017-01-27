@@ -157,6 +157,27 @@ static inline int isspace_ascii_inline(int const c)
    return (c >= 9 && c <= 13) || c == ' ';
 }
 
+// StringViewCompareFast - awkward attempt to optimize cache generation	/*{{{*/
+#ifdef APT_PKG_EXPOSE_STRING_VIEW
+/**
+ * \brief Faster comparison for string views (compare size before data)
+ *
+ * Still stable, but faster than the normal ordering.
+ *  As this is used for package comparison this *MUST* be case insensitive,
+ * as the alternative is to lower case all dependency fields which is slow. */
+static inline int StringViewCompareFast(APT::StringView a, APT::StringView b) {
+    if (a.size() != b.size())
+        return a.size() - b.size();
+    auto l(a.data()), r(b.data());
+    for (auto e(a.size()), i(decltype(e)(0)); i != e; ++i)
+        if (tolower_ascii_inline(l[i]) != tolower_ascii_inline(r[i]))
+            return tolower_ascii(l[i]) < tolower_ascii(r[i]) ? -1 : 1;
+    return 0;
+}
+#endif
+									/*}}}*/
+
+
 std::string StripEpoch(const std::string &VerStr);
 
 #define APT_MKSTRCMP(name,func) \

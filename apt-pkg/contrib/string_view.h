@@ -112,18 +112,6 @@ public:
     constexpr size_t length() const { return size_; }
 };
 
-/**
- * \brief Faster comparison for string views (compare size before data)
- *
- * Still stable, but faster than the normal ordering. */
-static inline int StringViewCompareFast(StringView a, StringView b) {
-    if (a.size() != b.size())
-        return a.size() - b.size();
-
-    return memcmp(a.data(), b.data(), a.size());
-}
-
-
 }
 
 inline bool operator ==(const char *other, APT::StringView that);
