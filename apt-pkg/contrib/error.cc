@@ -206,6 +206,15 @@ void GlobalError::Discard() {
 	PendingFlag = false;
 }
 									/*}}}*/
+// GlobalError::ReturnError - convert a stored error to a return code		/*{{{*/
+bool GlobalError::ReturnError() {
+	for (auto &message : Messages)
+		if (message.Type == ERROR)
+			message.Type = WARNING;
+	PendingFlag = false;
+	return false;
+}
+									/*}}}*/
 // GlobalError::empty - does our error list include anything?		/*{{{*/
 bool GlobalError::empty(MsgType const &threshold) const {
 	if (PendingFlag == true)

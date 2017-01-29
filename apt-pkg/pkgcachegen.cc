@@ -68,7 +68,7 @@ bool pkgCacheGenerator::Start()
       bool const newError = _error->PendingError();
       _error->MergeWithStack();
       if (newError)
-	 return false;
+	 return _error->ReturnError();
       if (Map.Size() <= 0)
 	 return false;
 
@@ -132,7 +132,7 @@ bool pkgCacheGenerator::Start()
    advoid a problem during a crash */
 pkgCacheGenerator::~pkgCacheGenerator()
 {
-   if (_error->PendingError() == true || Map.validData() == false)
+   if (Map.validData() == false)
       return;
    if (Map.Sync() == false)
       return;
@@ -249,10 +249,8 @@ bool pkgCacheGenerator::MergeList(ListParser &List,
    while (List.Step() == true)
    {
       string const PackageName = List.Package();
-      if (PackageName.empty() == true) {
-          _error->Warning("Encountered a section with no Package: header");
+      if (PackageName.empty() == true)
           continue;
-      }
 
       Counter++;
       if (Counter % 100 == 0 && Progress != 0)
@@ -276,7 +274,7 @@ bool pkgCacheGenerator::MergeList(ListParser &List,
       if (NewPackage(Pkg, PackageName, Arch) == false) {
 	 // TRANSLATOR: The first placeholder is a package name,
 	 // the other two should be copied verbatim as they include debug info
-	 _error->Warning(_("Error occurred while processing %s (%s%d)"),
+	 _error->Error(_("Error occurred while processing %s (%s%d)"),
 			      PackageName.c_str(), "NewPackage", 1);
          continue;
       }
@@ -340,7 +338,7 @@ bool pkgCacheGenerator::MergeListPackage(ListParser &List, pkgCache::PkgIterator
    pkgCache::VerIterator Ver(Cache);
    Dynamic<pkgCache::VerIterator> DynVer(Ver);
    if (List.UsePackage(Pkg, Ver) == false)
-      return _error->Warning(_("Error occurred while processing %s (%s%d)"),
+      return _error->Error(_("Error occurred while processing %s (%s%d)"),
 			   Pkg.Name(), "UsePackage", 1);
 
    // Find the right version to write the description
@@ -419,11 +417,11 @@ bool pkgCacheGenerator::MergeListVersion(ListParser &List, pkgCache::PkgIterator
       if (Res == 0 && Ver.end() == false && Ver->Hash == Hash)
       {
 	 if (List.UsePackage(Pkg,Ver) == false)
-	    return _error->Warning(_("Error occurred while processing %s (%s%d)"),
+	    return _error->Error(_("Error occurred while processing %s (%s%d)"),
 				 Pkg.Name(), "UsePackage", 2);
 
 	 if (NewFileVer(Ver,List) == false)
-	    return _error->Warning(_("Error occurred while processing %s (%s%d)"),
+	    return _error->Error(_("Error occurred while processing %s (%s%d)"),
 				 Pkg.Name(), "NewFileVer", 1);
 
 	 // Read only a single record and return
@@ -440,7 +438,7 @@ bool pkgCacheGenerator::MergeListVersion(ListParser &List, pkgCache::PkgIterator
    // Add a new version
    map_pointer_t const verindex = NewVersion(Ver, Version, Pkg.Index(), Hash, *LastVer);
    if (unlikely(verindex == 0))
-      return _error->Warning(_("Error occurred while processing %s (%s%d)"),
+      return _error->Error(_("Error occurred while processing %s (%s%d)"),
 			   Pkg.Name(), "NewVersion", 1);
 
    if (oldMap != Map.Data())
@@ -448,15 +446,15 @@ bool pkgCacheGenerator::MergeListVersion(ListParser &List, pkgCache::PkgIterator
    *LastVer = verindex;
 
    if (unlikely(List.NewVersion(Ver) == false))
-      return _error->Warning(_("Error occurred while processing %s (%s%d)"),
+      return _error->Error(_("Error occurred while processing %s (%s%d)"),
 			   Pkg.Name(), "NewVersion", 2);
 
    if (unlikely(List.UsePackage(Pkg,Ver) == false))
-      return _error->Warning(_("Error occurred while processing %s (%s%d)"),
+      return _error->Error(_("Error occurred while processing %s (%s%d)"),
 			   Pkg.Name(), "UsePackage", 3);
 
    if (unlikely(NewFileVer(Ver,List) == false))
-      return _error->Warning(_("Error occurred while processing %s (%s%d)"),
+      return _error->Error(_("Error occurred while processing %s (%s%d)"),
 			   Pkg.Name(), "NewFileVer", 2);
 
    pkgCache::GrpIterator Grp = Pkg.Group();
@@ -477,12 +475,12 @@ bool pkgCacheGenerator::MergeListVersion(ListParser &List, pkgCache::PkgIterator
 	 Dynamic<pkgCache::VerIterator> DynV(V);
 	 for (; V.end() != true; ++V)
 	    if (unlikely(AddImplicitDepends(V, Pkg) == false))
-	       return _error->Warning(_("Error occurred while processing %s (%s%d)"),
+	       return _error->Error(_("Error occurred while processing %s (%s%d)"),
 				    Pkg.Name(), "AddImplicitDepends", 1);
       }
    }
    if (unlikely(AddImplicitDepends(Grp, Pkg, Ver) == false))
-      return _error->Warning(_("Error occurred while processing %s (%s%d)"),
+      return _error->Error(_("Error occurred while processing %s (%s%d)"),
 			   Pkg.Name(), "AddImplicitDepends", 2);
 
    // Read only a single record and return
@@ -526,7 +524,7 @@ bool pkgCacheGenerator::AddNewDescription(ListParser &List, pkgCache::VerIterato
 
    map_pointer_t const descindex = NewDescription(Desc, lang, CurMd5, md5idx);
    if (unlikely(descindex == 0))
-      return _error->Warning(_("Error occurred while processing %s (%s%d)"),
+      return _error->Error(_("Error occurred while processing %s (%s%d)"),
 	    Ver.ParentPkg().Name(), "NewDescription", 1);
 
    md5idx = Desc->md5sum;
@@ -540,7 +538,7 @@ bool pkgCacheGenerator::AddNewDescription(ListParser &List, pkgCache::VerIterato
    *LastNextDesc = descindex;
 
    if (NewFileDesc(Desc,List) == false)
-      return _error->Warning(_("Error occurred while processing %s (%s%d)"),
+      return _error->Error(_("Error occurred while processing %s (%s%d)"),
 	    Ver.ParentPkg().Name(), "NewFileDesc", 1);
 
    return true;
@@ -1435,7 +1433,7 @@ static bool CheckValidity(FileFd &CacheFile, std::string const &CacheFileName,
    {
       if (Debug == true)
 	 std::clog << "Errors are pending or Map is empty() for " << CacheFileName << std::endl;
-      return false;
+      return _error->ReturnError();
    }
 
    std::unique_ptr<bool[]> RlsVisited(new bool[Cache.HeaderP->ReleaseFileCount]);
@@ -1515,7 +1513,7 @@ static bool CheckValidity(FileFd &CacheFile, std::string const &CacheFileName,
 	 std::clog << "Validity failed because of pending errors:" << std::endl;
 	 _error->DumpErrors(std::clog, GlobalError::DEBUG, false);
       }
-      return false;
+      return _error->ReturnError();
    }
 
    if (OutMap != 0)
@@ -1578,8 +1576,10 @@ static void BuildCache(pkgCacheGenerator &Gen,
 	 Progress->OverallProgress(CurrentSize, TotalSize, Size, _("Reading package lists"));
       CurrentSize += Size;
 
-      if (I->Merge(Gen,Progress) == false)
+      if (I->Merge(Gen,Progress) == false) {
+	 _error->ReturnError();
 	 return;
+      }
    };
 
    if (List !=  NULL)
@@ -1593,8 +1593,10 @@ static void BuildCache(pkgCacheGenerator &Gen,
 	    continue;
 	 }
 
-	 if ((*i)->Merge(Gen, Progress) == false)
+	 if ((*i)->Merge(Gen, Progress) == false) {
+	    _error->ReturnError();
 	    continue;
+	 }
 
 	 std::vector <pkgIndexFile *> *Indexes = (*i)->GetIndexFiles();
 	 if (Indexes != NULL)
@@ -1665,7 +1667,7 @@ static bool loadBackMMapFromFile(std::unique_ptr<pkgCacheGenerator> &Gen,
    bool const newError = _error->PendingError();
    _error->MergeWithStack();
    if (alloc == 0 && newError)
-      return false;
+      return _error->ReturnError();
    if (CacheF.Read((unsigned char *)Map->Data() + alloc, CacheF.Size()) == false)
       return false;
    Gen.reset(new pkgCacheGenerator(Map.get(),Progress));
@@ -1853,13 +1855,15 @@ bool pkgCacheGenerator::MakeOnlyStatusCache(OpProgress *Progress,DynamicMMap **O
    if (Progress != NULL)
       Progress->OverallProgress(0,1,1,_("Reading package lists"));
    pkgCacheGenerator Gen(Map.get(),Progress);
-   if (Gen.Start() == false || _error->PendingError() == true)
+   if (Gen.Start() == false)
       return false;
+   if (_error->PendingError() == true)
+      return _error->ReturnError();
    BuildCache(Gen,Progress,CurrentSize,TotalSize, NULL,
 		  Files.begin(), Files.end());
+   // We've passed the point of no return
+   _error->ReturnError();
 
-   if (_error->PendingError() == true)
-      return false;
    *OutMap = Map.release();
    
    return true;

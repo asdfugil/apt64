@@ -226,6 +226,26 @@ public:									/*{{{*/
 	 */
 	inline bool PendingError() const APT_PURE {return PendingFlag;};
 
+	/** \brief convert a stored error to a return code
+	 *
+	 *  Put simply, the entire concept of PendingError() is flawed :/.
+         *
+         *  The typical "if (PendingError()) return false;" check that is
+         *  strewn throughout the codebase "compounds", making it impossible
+         *  for there to be any nuance about the notion of "error" when a
+         *  subsystem needs to fail but a higher-level system needs to work.
+         *
+         *  However, the codebase is also horribly broken with respect to
+         *  errors, as it fails to use C++ exceptions when warranted and
+         *  instead relies on this insane indirect error mechanism to check
+         *  the failure status of a constructor. What is thereby needed is
+         *  a way to clear the PendingError() flag without also discarding
+         *  the underlying errors, so we have to convert them to warnings.
+         *
+	 *  \return \b false
+	 */
+	bool ReturnError() APT_COLD;
+
 	/** \brief is the list empty?
 	 *
 	 *  Can be used to check if the current stack level doesn't include

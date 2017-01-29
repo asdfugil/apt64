@@ -130,7 +130,7 @@ pkgCacheListParser * debTranslationsIndex::CreateListParser(FileFd &Pkg)
    std::unique_ptr<pkgCacheListParser> Parser(new debTranslationsParser(&Pkg));
    bool const newError = _error->PendingError();
    _error->MergeWithStack();
-   return newError ? nullptr : Parser.release();
+   return newError ? ((void)_error->ReturnError(), nullptr) : Parser.release();
 }
 									/*}}}*/
 // dpkg/status Index							/*{{{*/
@@ -158,7 +158,7 @@ pkgCacheListParser * debStatusIndex::CreateListParser(FileFd &Pkg)
    std::unique_ptr<pkgCacheListParser> Parser(new debStatusListParser(&Pkg));
    bool const newError = _error->PendingError();
    _error->MergeWithStack();
-   return newError ? nullptr : Parser.release();
+   return newError ? ((void)_error->ReturnError(), nullptr) : Parser.release();
 }
 									/*}}}*/
 // DebPkgFile Index - a single .deb file as an index			/*{{{*/
@@ -228,7 +228,7 @@ pkgCacheListParser * debDebPkgFileIndex::CreateListParser(FileFd &Pkg)
    std::unique_ptr<pkgCacheListParser> Parser(new debDebFileParser(&Pkg, DebFile));
    bool const newError = _error->PendingError();
    _error->MergeWithStack();
-   return newError ? nullptr : Parser.release();
+   return newError ? ((void)_error->ReturnError(), nullptr) : Parser.release();
 }
 uint8_t debDebPkgFileIndex::GetIndexFlags() const
 {

@@ -86,7 +86,7 @@ string debListParser::Package() {
    }
 
    if(unlikely(Result.empty() == true))
-      _error->Error("Encountered a section with no Package: header");
+      _error->Warning("Encountered a section with no Package: header");
    return Result;
 }
 									/*}}}*/

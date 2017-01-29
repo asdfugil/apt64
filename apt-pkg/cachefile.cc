@@ -97,7 +97,7 @@ bool pkgCacheFile::BuildCaches(OpProgress *Progress, bool WithLock)
 	 return false;
       Cache.reset(new pkgCache(Map.get()));
       if (_error->PendingError() == true)
-	 return false;
+	 return _error->ReturnError();
 
       this->Cache = Cache.release();
       this->Map = Map.release();
@@ -112,7 +112,7 @@ bool pkgCacheFile::BuildCaches(OpProgress *Progress, bool WithLock)
    }
 
    if (_error->PendingError() == true)
-      return false;
+      return _error->ReturnError();
 
    if (BuildSourceList(Progress) == false)
       return false;
@@ -128,14 +128,8 @@ bool pkgCacheFile::BuildCaches(OpProgress *Progress, bool WithLock)
    if (Res == false)
       return _error->Error(_("The package lists or status file could not be parsed or opened."));
 
-   /* This sux, remove it someday */
-   if (_error->PendingError() == true)
-      _error->Warning(_("You may want to run apt-get update to correct these problems"));
-
    if (Cache == nullptr)
       Cache.reset(new pkgCache(Map.get()));
-   if (_error->PendingError() == true)
-      return false;
    this->Map = Map.release();
    this->Cache = Cache.release();
 
@@ -169,7 +163,7 @@ bool pkgCacheFile::BuildPolicy(OpProgress * /*Progress*/)
 
    Policy.reset(new pkgPolicy(Cache));
    if (_error->PendingError() == true)
-      return false;
+      return _error->ReturnError();
 
    ReadPinFile(*Policy);
    ReadPinDir(*Policy);
@@ -195,7 +189,7 @@ bool pkgCacheFile::BuildDepCache(OpProgress *Progress)
 
    DCache.reset(new pkgDepCache(Cache,Policy));
    if (_error->PendingError() == true)
-      return false;
+      return _error->ReturnError();
    if (DCache->Init(Progress) == false)
       return false;
 
@@ -219,8 +213,6 @@ bool pkgCacheFile::Open(OpProgress *Progress, bool WithLock)
 
    if (Progress != NULL)
       Progress->Done();
-   if (_error->PendingError() == true)
-      return false;
    
    return true;
 }
@@ -266,7 +258,7 @@ bool pkgCacheFile::AddIndexFile(pkgIndexFile * const File)		/*{{{*/
 	 if (_error->PendingError() == true) {
 	    delete Cache;
 	    Cache = nullptr;
-	    return false;
+	    return _error->ReturnError();
 	 }
 	 return true;
       }
