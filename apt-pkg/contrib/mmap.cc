@@ -104,14 +104,14 @@ bool MMap::Map(FileFd &Fd)
 	    if (unlikely(Base == nullptr))
 	       return _error->Errno("MMap-malloc", _("Couldn't make mmap of %llu bytes"), iSize);
 	    SyncToFd = new FileFd();
-	    return Fd.Read(Base, iSize);
+	    return Fd.Seek(0L) && Fd.Read(Base, iSize);
 	 }
 	 // FIXME: Writing to compressed fd's ?
 	 int const dupped_fd = dup(Fd.Fd());
 	 if (dupped_fd == -1)
 	    return _error->Errno("mmap", _("Couldn't duplicate file descriptor %i"), Fd.Fd());
 
-	 Base = calloc(iSize, 1);
+	 Base = malloc(iSize);
 	 if (unlikely(Base == nullptr))
 	    return _error->Errno("MMap-calloc", _("Couldn't make mmap of %llu bytes"), iSize);
 	 SyncToFd = new FileFd (dupped_fd);
