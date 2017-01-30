@@ -59,7 +59,7 @@ class MMap
    
    public:
 
-   enum OpenFlags {NoImmMap = (1<<0),Public = (1<<1),ReadOnly = (1<<2),
+   enum OpenFlags {Public = (1<<1),ReadOnly = (1<<2),
                    UnMapped = (1<<3), Moveable = (1<<4), Fallback = (1 << 5)};
       
    // Simple accessors

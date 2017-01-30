@@ -38,7 +38,6 @@
 MMap::MMap(FileFd &F,unsigned long Flags) : Flags(Flags), iSize(0),
                      Base(nullptr), SyncToFd(nullptr)
 {
-   if ((Flags & NoImmMap) != NoImmMap)
       Map(F);
 }
 									/*}}}*/
@@ -215,7 +214,7 @@ bool MMap::Sync(unsigned long Start,unsigned long Stop)
 /* */
 DynamicMMap::DynamicMMap(FileFd &F,unsigned long Flags,unsigned long const &Workspace,
 			 unsigned long const &Grow, unsigned long const &Limit) :
-		MMap(F,Flags | NoImmMap), Fd(&F), WorkSpace(Workspace),
+		MMap(Flags), Fd(&F), WorkSpace(Workspace),
 		GrowFactor(Grow), Limit(Limit)
 {
    // disable Moveable if we don't grow
@@ -249,7 +248,7 @@ DynamicMMap::DynamicMMap(FileFd &F,unsigned long Flags,unsigned long const &Work
    and could come in handy later than we are able to grow such an mmap */
 DynamicMMap::DynamicMMap(unsigned long Flags,unsigned long const &WorkSpace,
 			 unsigned long const &Grow, unsigned long const &Limit) :
-		MMap(Flags | NoImmMap | UnMapped), Fd(0), WorkSpace(WorkSpace),
+		MMap(Flags | UnMapped), Fd(0), WorkSpace(WorkSpace),
 		GrowFactor(Grow), Limit(Limit)
 {
 	// disable Moveable if we don't grow
