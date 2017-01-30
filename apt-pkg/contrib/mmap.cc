@@ -192,7 +192,7 @@ bool MMap::Sync(unsigned long Start,unsigned long Stop)
    {
       if (SyncToFd != 0)
       {
-	 if (!SyncToFd->Seek(0) ||
+	 if (!SyncToFd->Seek(Start) ||
 	     !SyncToFd->Write (((char *)Base)+Start, Stop-Start))
 	    return false;
       }
