@@ -487,12 +487,14 @@ bool DynamicMMap::Grow() {
 		if ((Flags & Moveable) != Moveable)
 			return false;
 
-		Base = realloc(Base, newSize);
-		if (Base == NULL)
+		auto Temp = realloc(Base, newSize);
+		if (Temp == NULL)
 			return false;
-		else
+		else {
+			Base = Temp;
 			/* Set new memory to 0 */
 			memset((char*)Base + WorkSpace, 0, newSize - WorkSpace);
+		}
 	}
 
 	Pools =(Pool*) Base + poolOffset;
