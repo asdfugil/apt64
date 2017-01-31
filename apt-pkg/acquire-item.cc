@@ -1455,7 +1455,6 @@ bool pkgAcqMetaBase::CheckDownloadDone(pkgAcqTransactionItem * const I, const st
    {
       // for simplicity, the transaction manager is always InRelease
       // even if it doesn't exist.
-      TransactionManager->IMSHit = true;
       I->PartialFile = I->DestFile = I->GetFinalFilename();
    }
 
