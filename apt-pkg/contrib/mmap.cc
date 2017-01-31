@@ -305,10 +305,11 @@ DynamicMMap::~DynamicMMap()
       if (validData() == false)
 	 return;
 #ifdef _POSIX_MAPPED_FILES
-      munmap(Base, WorkSpace);
-#else
-      free(Base);
+      if ((Flags & Fallback) != Fallback) {
+         munmap(Base, WorkSpace);
+      } else
 #endif
+      free(Base);
       return;
    }
    
