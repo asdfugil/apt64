@@ -175,6 +175,10 @@ void pkgCacheGenerator::ReMap(void const * const oldMap, void const * const newM
 	i != Dynamic<pkgCache::VerIterator>::toReMap.end(); ++i)
       if (std::get<1>(seen.insert(*i)) == true)
 	 (*i)->ReMap(oldMap, newMap);
+   for (std::vector<pkgCache::TagIterator*>::const_iterator i = Dynamic<pkgCache::TagIterator>::toReMap.begin();
+	i != Dynamic<pkgCache::TagIterator>::toReMap.end(); ++i)
+      if (std::get<1>(seen.insert(*i)) == true)
+	 (*i)->ReMap(oldMap, newMap);
    for (std::vector<pkgCache::DepIterator*>::const_iterator i = Dynamic<pkgCache::DepIterator>::toReMap.begin();
 	i != Dynamic<pkgCache::DepIterator>::toReMap.end(); ++i)
 	if (std::get<1>(seen.insert(*i)) == true)
@@ -1290,18 +1294,20 @@ bool pkgCacheGenerator::NewTag(pkgCache::VerIterator &Ver,
 					   unsigned int NameSize)
 {
    // Get a structure
-   unsigned long Tagg = AllocateInMap(sizeof(pkgCache::Tag));
-   if (Tagg == 0)
+   map_pointer_t const idxTag = AllocateInMap(sizeof(pkgCache::Tag));
+   if (unlikely(idxTag == 0))
       return false;
-   Cache.HeaderP->TagCount++;
    
    // Fill it in
-   pkgCache::TagIterator Tg(Cache,Cache.TagP + Tagg);
-   Tg->Name = WriteStringInMap(NameStart,NameSize);
-   if (Tg->Name == 0)
+   pkgCache::TagIterator Tg(Cache,Cache.TagP + idxTag);
+   map_pointer_t const idxName = WriteStringInMap(NameStart,NameSize);
+   if (idxName == 0)
       return false;
+   Tg->Name = idxName;
+
    Tg->NextTag = Ver->TagList;
    Ver->TagList = Tg.Index();
+   Cache.HeaderP->TagCount++;
    
    return true;
 }

@@ -252,45 +252,30 @@ class pkgCache::VerIterator : public Iterator<Version, VerIterator> {
 };
 									/*}}}*/
 // Tag Iterator								/*{{{*/
-class pkgCache::TagIterator
-{
-   Tag *Tg;
-   pkgCache *Owner;
-
-   void _dummy();
-
-   public:
+class pkgCache::TagIterator : public Iterator<Tag, TagIterator> {
+	public:
+	inline Tag* OwnerPointer() const {
+		return (Owner != 0) ? Owner->TagP : 0;
+	}
 
    // Iteration
-   void operator ++(int) {if (Tg != Owner->TagP) Tg = Owner->TagP + Tg->NextTag;};
+   void operator ++(int) {if (S != Owner->TagP) S = Owner->TagP + S->NextTag;};
    inline void operator ++() {operator ++(0);};
-   inline bool end() const {return Tg == Owner->TagP?true:false;};
-   inline void operator =(const TagIterator &B) {Tg = B.Tg; Owner = B.Owner;};
 
    // Comparison
-   inline bool operator ==(const TagIterator &B) const {return Tg == B.Tg;};
-   inline bool operator !=(const TagIterator &B) const {return Tg != B.Tg;};
+   inline bool operator ==(const TagIterator &B) const {return S == B.S;};
+   inline bool operator !=(const TagIterator &B) const {return S != B.S;};
    int CompareTag(const TagIterator &B) const;
 
    // Accessors
-   inline Tag *operator ->() {return Tg;};
-   inline Tag const *operator ->() const {return Tg;};
-   inline Tag &operator *() {return *Tg;};
-   inline Tag const &operator *() const {return *Tg;};
-   inline operator Tag *() {return Tg == Owner->TagP?0:Tg;};
-   inline operator Tag const *() const {return Tg == Owner->TagP?0:Tg;};
-   inline pkgCache *Cache() {return Owner;};
+   inline const char *Name() const {return Owner->StrP + S->Name;};
+   inline unsigned long Index() const {return S - Owner->TagP;};
 
-   inline const char *Name() const {return Owner->StrP + Tg->Name;};
-   inline unsigned long Index() const {return Tg - Owner->TagP;};
-
-   inline TagIterator() : Tg(0), Owner(0) {};
-   inline TagIterator(pkgCache &Owner,Tag *Trg = 0) : Tg(Trg),
-              Owner(&Owner)
-   {
-      if (Tg == 0)
-	 Tg = Owner.TagP;
-   };
+	inline TagIterator(pkgCache &Owner,Tag *Trg = 0) : Iterator<Tag, TagIterator>(Owner, Trg) {
+		if (S == 0)
+			S = OwnerPointer();
+	}
+	inline TagIterator() : Iterator<Tag, TagIterator>() {}
 };
 									/*}}}*/
 // Description Iterator							/*{{{*/
