@@ -59,7 +59,7 @@ template<typename Str, typename Itr> class pkgCache::Iterator :
 	Str* OwnerPointer() const { return static_cast<Itr const*>(this)->OwnerPointer(); }
 
 	protected:
-	Str *S;
+	Str *volatile S;
 	pkgCache *Owner;
 
 	public:
