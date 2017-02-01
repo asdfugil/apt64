@@ -77,6 +77,7 @@ class APT_HIDDEN pkgCacheGenerator					/*{{{*/
    std::unordered_set<string_pointer, hash> strPkgNames;
    std::unordered_set<string_pointer, hash> strVersions;
    std::unordered_set<string_pointer, hash> strSections;
+   std::unordered_set<string_pointer, hash> strTags;
 #endif
 
    friend class pkgCacheListParser;
@@ -131,7 +132,7 @@ class APT_HIDDEN pkgCacheGenerator					/*{{{*/
 
    public:
 
-   enum StringType { MIXED, PKGNAME, VERSIONNUMBER, SECTION };
+   enum StringType { MIXED, PKGNAME, VERSIONNUMBER, SECTION, TAG };
    map_stringitem_t StoreString(StringType const type, const char * S, unsigned int const Size);
 
 #ifdef APT_PKG_EXPOSE_STRING_VIEW

@@ -1300,7 +1300,7 @@ bool pkgCacheGenerator::NewTag(pkgCache::VerIterator &Ver,
    
    // Fill it in
    pkgCache::TagIterator Tg(Cache,Cache.TagP + idxTag);
-   map_pointer_t const idxName = WriteStringInMap(NameStart,NameSize);
+   map_pointer_t const idxName = StoreString(TAG,NameStart,NameSize);
    if (idxName == 0)
       return false;
    Tg->Name = idxName;
@@ -1380,6 +1380,7 @@ map_stringitem_t pkgCacheGenerator::StoreString(enum StringType const type, cons
       case PKGNAME: strings = &strPkgNames; break;
       case VERSIONNUMBER: strings = &strVersions; break;
       case SECTION: strings = &strSections; break;
+      case TAG: strings = &strTags; break;
       default: _error->Fatal("Unknown enum type used for string storage of '%.*s'", Size, S); return 0;
    }
 
