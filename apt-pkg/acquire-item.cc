@@ -1607,7 +1607,7 @@ void pkgAcqMetaClearSig::QueueIndexes(bool const verify)			/*{{{*/
 	    }
 
 	    // optional targets that we do not have in the Release file are skipped
-	    if (hasHashes == true && Target.IsOptional)
+	    if (Target.IsOptional)
 	    {
 	       new CleanupItem(Owner, TransactionManager, Target);
 	       continue;
@@ -1723,6 +1723,13 @@ void pkgAcqMetaClearSig::QueueIndexes(bool const verify)			/*{{{*/
       }
       else
       {
+	 // if the source wanted these files they should have given us a release file :/
+	 if (Target.IsOptional)
+	 {
+	    new CleanupItem(Owner, TransactionManager, Target);
+	    continue;
+	 }
+
 	 // if we have no file to patch, no point in trying
 	 trypdiff &= (GetExistingFilename(GetFinalFileNameFromURI(Target.URI)).empty() == false);
       }
