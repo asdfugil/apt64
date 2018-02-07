@@ -18,6 +18,10 @@
 #include <unistd.h>
 
 #include "byhash.h"
+#ifdef __APPLE__
+#define st_mtim st_mtimespec
+#endif
+
 #include <apt-pkg/fileutl.h>
 #include <apt-pkg/hashes.h>
 

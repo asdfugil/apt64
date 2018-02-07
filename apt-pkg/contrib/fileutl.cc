@@ -27,6 +27,7 @@
 #include <apt-pkg/pkgsystem.h>
 #include <apt-pkg/sptr.h>
 #include <apt-pkg/strutl.h>
+#include <apt-pkg/endian.h>
 
 #include <cstdio>
 #include <cstdlib>
