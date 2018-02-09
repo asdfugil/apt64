@@ -19,7 +19,7 @@ target_compile_definitions(connectlib PRIVATE ${GNUTLS_DEFINITIONS})
 target_include_directories(connectlib PRIVATE ${GNUTLS_INCLUDE_DIR})
 
 # Additional libraries to link against for networked stuff
-target_link_libraries(http ${GNUTLS_LIBRARIES})
+target_link_libraries(http apt-pkg lockdown "-framework CoreFoundation" "-framework CFNetwork" "-framework SystemConfiguration" ${GNUTLS_LIBRARIES})
 target_link_libraries(ftp ${GNUTLS_LIBRARIES})
 
 # Install the library
