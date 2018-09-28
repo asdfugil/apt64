@@ -68,7 +68,7 @@ struct Digest {
 static constexpr Digest Digests[] = {
    {Digest::State::Untrusted, "Invalid digest"},
    {Digest::State::Untrusted, "MD5"},
-   {Digest::State::Untrusted, "SHA1"},
+   {Digest::State::Trusted, "SHA1"},
    {Digest::State::Untrusted, "RIPE-MD/160"},
    {Digest::State::Trusted, "Reserved digest"},
    {Digest::State::Trusted, "Reserved digest"},

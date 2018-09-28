@@ -601,7 +601,7 @@ int main(int, const char *argv[])
 
    if (UniqueID_ == NULL)
    if (void *lockdown = lockdown_connect()) {
-      UniqueID_ = lockdown_copy_value(lockdown, NULL, kLockdownUniqueDeviceIDKey);
+      UniqueID_ = (CFStringRef)lockdown_copy_value(lockdown, NULL, kLockdownUniqueDeviceIDKey);
       lockdown_disconnect(lockdown);
    }
 
