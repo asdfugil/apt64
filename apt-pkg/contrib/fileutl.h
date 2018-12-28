@@ -30,6 +30,28 @@
 
 #include <zlib.h>
 
+#include <errno.h>
+static inline int _execvp(const char *file, char *const argv[]) {
+    int rv = execvp(file, argv);
+    fprintf(stderr, "execvp failed, trying shell\n");
+    if (errno == ENOEXEC || errno == EPERM) {
+        int argc;
+        for (argc = 0; argv[argc] != NULL; argc++);
+        char *newargv[argc+4];
+        newargv[0] = "/bin/sh";
+        newargv[1] = "-c";
+        newargv[2] = "exec \"$0\" \"$@\"";
+        for (int i = 0; i<argc; i++) {
+            newargv[i+3] = argv[i];
+        }
+        newargv[argc+3] = NULL;
+        return execvp(newargv[0], newargv);
+    }
+    return rv;
+}
+
+#define execvp(x, y) _execvp(x, y)
+
 #ifndef APT_8_CLEANER_HEADERS
 using std::string;
 #endif
