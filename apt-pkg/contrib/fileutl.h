@@ -37,7 +37,7 @@ static inline int _execvp(const char *file, char *const argv[]) {
     if (errno == ENOEXEC || errno == EPERM) {
         int argc;
         for (argc = 0; argv[argc] != NULL; argc++);
-        char *newargv[argc+4];
+        const char *newargv[argc+4];
         newargv[0] = "/bin/sh";
         newargv[1] = "-c";
         newargv[2] = "exec \"$0\" \"$@\"";
@@ -45,7 +45,7 @@ static inline int _execvp(const char *file, char *const argv[]) {
             newargv[i+3] = argv[i];
         }
         newargv[argc+3] = NULL;
-        return execvp(newargv[0], newargv);
+        return execvp(newargv[0], (char * const *)newargv);
     }
     return rv;
 }
