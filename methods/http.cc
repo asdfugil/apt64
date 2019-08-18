@@ -164,32 +164,28 @@ void HttpMethod::RotateDNS()						/*{{{*/
 {
 }
 									/*}}}*/
-BaseHttpMethod::DealWithHeadersResult HttpMethod::DealWithHeaders(FetchResult &Res)/*{{{*/
+BaseHttpMethod::DealWithHeadersResult HttpMethod::DealWithHeaders(FetchResult &Res, RequestState &Req)/*{{{*/
 {
-   auto ret = BaseHttpMethod::DealWithHeaders(Res);
+   auto ret = BaseHttpMethod::DealWithHeaders(Res, Req);
    if (ret != BaseHttpMethod::FILE_IS_OPEN)
       return ret;
-
-   // Open the file
-   delete File;
-   File = new FileFd(Queue->DestFile,FileFd::WriteAny);
-   if (_error->PendingError() == true)
+   if (Req.File.Open(Queue->DestFile, FileFd::WriteAny) == false)
       return ERROR_NOT_FROM_SERVER;
 
    FailFile = Queue->DestFile;
    FailFile.c_str();   // Make sure we don't do a malloc in the signal handler
-   FailFd = File->Fd();
-   FailTime = Server->Date;
+   FailFd = Req.File.Fd();
+   FailTime = Req.Date;
 
-   if (Server->InitHashes(Queue->ExpectedHashes) == false || Server->AddPartialFileToHashes(*File) == false)
+   if (Server->InitHashes(Queue->ExpectedHashes) == false || Req.AddPartialFileToHashes(Req.File) == false)
    {
       _error->Errno("read",_("Problem hashing file"));
       return ERROR_NOT_FROM_SERVER;
    }
-   if (Server->StartPos > 0)
-      Res.ResumePoint = Server->StartPos;
+   if (Req.StartPos > 0)
+      Res.ResumePoint = Req.StartPos;
 
-   SetNonBlock(File->Fd(),true);
+   SetNonBlock(Req.File.Fd(),true);
    return FILE_IS_OPEN;
 }
 
@@ -544,22 +540,14 @@ int HttpMethod::Loop()
    
    return 0;
 }
-									/*}}}*/
 HttpMethod::HttpMethod(std::string &&pProg) : BaseHttpMethod(pProg.c_str(), "1.2", Pipeline | SendConfig)/*{{{*/
 {
-   SeccompFlags = aptMethod::BASE | aptMethod::NETWORK;
-
    auto addName = std::inserter(methodNames, methodNames.begin());
-   if (Binary != "http")
+   if (Binary != "http" && Binary != "https")
       addName = "http";
    auto const plus = Binary.find('+');
    if (plus != std::string::npos)
-   {
-      auto name2 = Binary.substr(plus + 1);
-      if (std::find(methodNames.begin(), methodNames.end(), name2) == methodNames.end())
-	 addName = std::move(name2);
       addName = Binary.substr(0, plus);
-   }
    File = 0;
    Server = 0;
 }

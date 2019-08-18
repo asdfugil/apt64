@@ -13,8 +13,6 @@
 #include <config.h>
 
 #include <apt-pkg/mmap.h>
-#include <apt-pkg/tagfile.h>
-#include <apt-pkg/tagfile-keys.h>
 #include <apt-pkg/error.h>
 #include <apt-pkg/fileutl.h>
 #include <apt-pkg/string_view.h>

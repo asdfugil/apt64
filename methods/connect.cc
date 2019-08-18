@@ -273,8 +273,8 @@ static ResultState WaitAndCheckErrors(std::list<Connection> &Conns, std::unique_
 
    struct timeval tv = {
       // Split our millisecond timeout into seconds and microseconds
-      .tv_sec = TimeoutMsec / 1000,
-      .tv_usec = (TimeoutMsec % 1000) * 1000,
+      .tv_sec = static_cast<time_t>(TimeoutMsec / 1000),
+      .tv_usec = static_cast<suseconds_t>((TimeoutMsec % 1000) * 1000),
    };
 
    // We will return once we have no more connections, a time out, or

@@ -177,7 +177,7 @@ bool pkgInitConfig(Configuration &Cnf)
    Cnf.Set("Dir::Ignore-Files-Silently::", "\\.distUpgrade$");
 
    // Repository security
-   Cnf.CndSet("Acquire::AllowInsecureRepositories", false);
+   Cnf.CndSet("Acquire::AllowInsecureRepositories", true);
    Cnf.CndSet("Acquire::AllowWeakRepositories", false);
    Cnf.CndSet("Acquire::AllowDowngradeToInsecureRepositories", false);
 

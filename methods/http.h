@@ -38,6 +38,7 @@ class HttpMethod : public BaseHttpMethod
    virtual DealWithHeadersResult DealWithHeaders(FetchResult &Res, RequestState &Req) APT_OVERRIDE;
 
    protected:
+   FileFd *File;
    std::string AutoDetectProxyCmd;
 
    public:
