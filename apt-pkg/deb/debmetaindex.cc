@@ -593,6 +593,9 @@ bool debReleaseIndex::Load(std::string const &Filename, std::string * const Erro
 
 	 if (MinAge != 0 || ValidUntil != 0 || MaxAge != 0)
 	 {
+	    if (Date == 0)
+	       _error->Warning( _("Invalid '%s' entry in Release file %s"), "Date", Filename.c_str());
+
 	    if (MinAge != 0 && ValidUntil != 0)
 	    {
 	       time_t const min_date = Date + MinAge;
