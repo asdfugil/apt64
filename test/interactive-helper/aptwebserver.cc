@@ -11,6 +11,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <netinet/in.h>
+#include <pthread.h>
 #include <regex.h>
 #include <signal.h>
 #include <stddef.h>
