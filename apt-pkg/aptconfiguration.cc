@@ -35,11 +35,11 @@ namespace APT {
 // setDefaultConfigurationForCompressors				/*{{{*/
 static void setDefaultConfigurationForCompressors() {
 	// Set default application paths to check for optional compression types
-	_config->CndSet("Dir::Bin::gzip", "/bin/gzip");
-	_config->CndSet("Dir::Bin::bzip2", "/bin/bzip2");
-	_config->CndSet("Dir::Bin::xz", "/usr/bin/xz");
-	_config->CndSet("Dir::Bin::lz4", "/usr/bin/lz4");
-	_config->CndSet("Dir::Bin::zstd", "/usr/bin/zstd");
+	_config->CndSet("Dir::Bin::gzip", "/var/jb/usr/bin/gzip");
+	_config->CndSet("Dir::Bin::bzip2", "/var/jb/usr/bin/bzip2");
+	_config->CndSet("Dir::Bin::xz", "/var/jb/usr/bin/xz");
+	_config->CndSet("Dir::Bin::lz4", "/var/jb/usr/bin/lz4");
+	_config->CndSet("Dir::Bin::zstd", "/var/jb/usr/bin/zstd");
 	if (FileExists(_config->Find("Dir::Bin::xz")) == true) {
 		_config->Set("Dir::Bin::lzma", _config->Find("Dir::Bin::xz"));
 		_config->Set("APT::Compressor::lzma::Binary", "xz");
@@ -52,7 +52,7 @@ static void setDefaultConfigurationForCompressors() {
 			_config->Set("APT::Compressor::lzma::UncompressArg::", "-d");
 		}
 	} else {
-		_config->CndSet("Dir::Bin::lzma", "/usr/bin/lzma");
+		_config->CndSet("Dir::Bin::lzma", "/var/jb/usr/bin/lzma");
 		if (_config->Exists("APT::Compressor::lzma::CompressArg") == false) {
 			_config->Set("APT::Compressor::lzma::CompressArg::", "--suffix=");
 			_config->Set("APT::Compressor::lzma::CompressArg::", "-6");

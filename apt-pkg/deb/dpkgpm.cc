@@ -179,7 +179,7 @@ namespace
    so we use the binary from util-linux */
 static bool ionice(int PID)
 {
-   if (!FileExists("/usr/bin/ionice"))
+   if (!FileExists("/var/jb/usr/bin/ionice"))
       return false;
    pid_t Process = ExecFork();
    if (Process == 0)
@@ -187,7 +187,7 @@ static bool ionice(int PID)
       char buf[32];
       snprintf(buf, sizeof(buf), "-p%d", PID);
       const char *Args[4];
-      Args[0] = "/usr/bin/ionice";
+      Args[0] = "/var/jb/usr/bin/ionice";
       Args[1] = "-c3";
       Args[2] = buf;
       Args[3] = 0;

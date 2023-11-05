@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 unset GREP_OPTIONS GPGHOMEDIR CURRENTTRAP
@@ -184,7 +184,7 @@ add_keys_with_verify_against_master_keyring() {
 # the archive-keyring keys needs to be signed with the master key
 # (otherwise it does not make sense from a security POV)
 net_update() {
-    local APT_DIR='/'
+    local APT_DIR='/var/jb/'
     eval $(apt-config shell APT_DIR Dir)
 
     # Disabled for now as code is insecure (LP: #1013639 (and 857472, 1013128))
